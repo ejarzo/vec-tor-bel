@@ -2,6 +2,11 @@ import React, { Component } from 'react';
 import YouTube from 'react-youtube';
 
 class YoutubePlayer extends Component {
+  handleReady(e) {
+    const player = e.target;
+    player.setPlaybackRate(0.5);
+  }
+
   render() {
     const { videoId } = this.props;
     const options = {
@@ -25,7 +30,7 @@ class YoutubePlayer extends Component {
 
     return (
       <div>
-        <YouTube videoId={videoId} opts={options} />
+        <YouTube onReady={this.handleReady} videoId={videoId} opts={options} />
       </div>
     );
   }

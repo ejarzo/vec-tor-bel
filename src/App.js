@@ -2,18 +2,15 @@ import React, { Component } from 'react';
 import './App.css';
 
 import Sketch1 from 'components/p5sketches/Sketch1';
+
 import YoutubePlayer from 'components/YoutubePlayer';
-
-import { YOUTUBE_API_KEY, FREESOUND_API_KEY } from 'config/apiKeys';
-
-const fetchApi = (url, params) => {
-  const esc = encodeURIComponent;
-  const query = Object.keys(params)
-    .map(k => esc(k) + '=' + esc(params[k]))
-    .join('&');
-
-  return fetch(`${url}/?${query}`).then(response => response.json());
-};
+import {
+  getYoutubeResults,
+  getYoutubeComments,
+  getFreesoundResults,
+  getCleverbotReply,
+  getNews,
+} from 'middleware/middleware.js';
 
 class App extends Component {
   constructor(props) {
@@ -21,10 +18,15 @@ class App extends Component {
     this.state = {
       videoId: '',
       videoComments: [],
+      output: 'what is the meaning of life?',
+      conversationHistory: '',
     };
 
     this.getYoutubeResults = this.getYoutubeResults.bind(this);
     this.getYoutubeComments = this.getYoutubeComments.bind(this);
+    this.getFreesoundResults = this.getFreesoundResults.bind(this);
+    this.getCleverbotReply = this.getCleverbotReply.bind(this);
+    this.getNews = this.getNews.bind(this);
   }
 
   getYoutubeResults() {
@@ -33,16 +35,7 @@ class App extends Component {
         ? this.state.videoComments[0].text.split(' ')[0]
         : 'slomo';
 
-    const baseUrl = 'https://www.googleapis.com/youtube/v3/search';
-    const params = {
-      key: YOUTUBE_API_KEY,
-      part: 'snippet',
-      type: 'vide',
-      maxResults: 15,
-      q: query,
-    };
-
-    fetchApi(baseUrl, params).then(data => {
+    getYoutubeResults(query).then(data => {
       const { items: videos } = data;
       if (videos.length > 0) {
         const videoId =
@@ -51,54 +44,74 @@ class App extends Component {
         this.setState({ videoId });
         this.getYoutubeComments(videoId);
       } else {
-        console.log('no videos');
+        console.log('No videos');
       }
     });
   }
 
   getYoutubeComments(videoId) {
-    const url = 'https://www.googleapis.com/youtube/v3/commentThreads';
-    const params = {
-      key: YOUTUBE_API_KEY,
-      videoId,
-      part: 'snippet',
-      textFormat: 'plainText',
-      order: 'relevance',
-      maxResults: 5,
-    };
-
-    fetchApi(url, params).then(data => {
+    getYoutubeComments(videoId).then(data => {
       console.log(data);
-      const { items: comments } = data;
-      if (comments.length > 0) {
-        const videoComments = comments
-          ? comments.map(item => ({
-              id: item.id,
-              author: item.snippet.topLevelComment.snippet.authorDisplayName,
-              text: item.snippet.topLevelComment.snippet.textDisplay,
-            }))
-          : [];
+      const { items } = data;
+      if (items && items.length > 0) {
+        const videoComments = items.map(item => ({
+          id: item.id,
+          author: item.snippet.topLevelComment.snippet.authorDisplayName,
+          text: item.snippet.topLevelComment.snippet.textDisplay,
+        }));
         this.setState({ videoComments });
+      } else {
+        console.log('No Comments');
       }
     });
   }
 
   getFreesoundResults() {
-    const query = 'dog';
+    const query =
+      this.state.videoComments.length > 0
+        ? this.state.videoComments[0].text.split(' ')[0]
+        : 'slomo';
 
-    const baseUrl = 'https://freesound.org/apiv2/search/text';
-    const params = {
-      token: FREESOUND_API_KEY,
-      query: query,
-      fields: 'name,previews',
-    };
+    getFreesoundResults(query).then(
+      data => {
+        const { results } = data;
+        if (results.length <= 0) {
+          console.log('NO SOUNDS for', query);
+        } else {
+          const first = data.results.length > 0 && data.results[0];
+          const previewUrl = first.previews['preview-hq-mp3'];
+          console.log(previewUrl);
+        }
+      },
+      error => {
+        console.log('error', error);
+      }
+    );
+  }
 
-    fetchApi(baseUrl, params).then(
+  getCleverbotReply() {
+    const query = this.state.output;
+    const cs = this.state.conversationHistory;
+
+    getCleverbotReply(query, cs).then(
       data => {
         console.log(data);
-        const first = data.results.length > 0 && data.results[0];
-        const previewUrl = first.previews['preview-hq-mp3'];
-        console.log(previewUrl);
+
+        this.setState({
+          output: data.output,
+          conversationHistory: data.cs,
+        });
+      },
+      error => {
+        console.log('error', error);
+      }
+    );
+  }
+
+  getNews() {
+    getNews().then(
+      data => {
+        console.log(data);
       },
       error => {
         console.log('error', error);
@@ -115,12 +128,15 @@ class App extends Component {
         <YoutubePlayer videoId={videoId} />
         <button onClick={this.getYoutubeResults}>fetch</button>
         <button onClick={this.getFreesoundResults}>fetch sounds</button>
+        <button onClick={this.getCleverbotReply}>fetch cleverbot</button>
+        <button onClick={this.getNews}>Get News</button>
         {videoComments.map(comment => (
           <div key={comment.id} style={{ padding: 10 }}>
             <div>{comment.author}</div>
             <div>{comment.text}</div>
           </div>
         ))}
+        <div style={{ padding: 20 }}>{this.state.output}</div>
       </div>
     );
   }
