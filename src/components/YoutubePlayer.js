@@ -4,7 +4,7 @@ import YouTube from 'react-youtube';
 class YoutubePlayer extends Component {
   handleReady(e) {
     const player = e.target;
-    player.setPlaybackRate(0.5);
+    // player.setPlaybackRate(0.5);
   }
 
   render() {
