@@ -38,23 +38,24 @@ class App extends Component {
 
   async componentDidMount() {
     const { articles } = await getNews().catch(error => {
+      console.log(error);
+      return {};
       // TODO: handle get news error
-      console.log('error getting news', error);
     });
     if (!articles) return;
 
-    let firstArticle = articles[0];
+    let initArticle = getRandomIn(articles);
 
     // search top headline on youtube
     const [{ videoId, videoComments }, soundUrl] = await Promise.all([
-      this.getYoutubeData(firstArticle.title),
-      this.getSoundUrl(firstArticle.title),
+      this.getYoutubeData(initArticle.title),
+      this.getSoundUrl(initArticle.title),
     ]);
 
     // initialize with top headline
     this.setState({
-      todaysArticle: firstArticle,
-      replies: [firstArticle.title],
+      todaysArticle: initArticle,
+      replies: [initArticle.title],
       videoId,
       videoComments,
       soundUrl,
@@ -73,20 +74,15 @@ class App extends Component {
   async getYoutubeData(query) {
     let videoId = '';
     let videoComments = [];
-    console.log('===========');
-    console.log('Searching Youtube for', query);
     const videos = await getYoutubeVideos(query).catch(error => {
       // TODO: handle no videos
       console.log('error');
       console.log(error);
     });
-    console.log('videos:', videos);
     if (!videos) return { videoId, videoComments };
 
     const randomVideo = getRandomIn(videos);
     videoId = randomVideo.id.videoId;
-
-    console.log(videoId);
     videoComments = await getYoutubeComments(videoId).catch(error => {
       // TODO: handle no comments
       return [];
@@ -102,16 +98,12 @@ class App extends Component {
 
   async getCleverbotReply(query) {
     const { lastCBResponse } = this.state;
-
-    console.log('===========================');
-    console.log('searching cleverbot for...');
     console.log(query);
 
     const data = await getCleverbotReply(query, lastCBResponse.cs);
-    console.log('RESULT:', data);
-
     const replies = this.state.replies.slice();
     const { output, emotion } = data;
+
     replies.push(output);
     const [{ videoId, videoComments }, soundUrl] = await Promise.all([
       this.getYoutubeData(output),
@@ -129,7 +121,7 @@ class App extends Component {
   }
 
   async getNews() {
-    const { articles } = await getNews();
+    const { articles } = await getNews().catch(() => ({}));
     if (articles[0].title !== this.state.todaysArticle.title) {
       console.log('NEW HEADLINE');
       console.log(articles[0].title);
@@ -141,36 +133,27 @@ class App extends Component {
   }
 
   render() {
-    const { videoId, videoComments, replies } = this.state;
+    const { videoId, videoComments, replies, lastCBResponse } = this.state;
     const n = replies.length;
     return (
       <div className="App" style={{ paddingBottom: 100 }}>
-        <Sketch1
-          currReply={replies.length > 0 && replies[n - 1]}
-          prevReply={replies.length > 1 && replies[n - 2]}
-          count={this.state.count}
-        />
-        <YoutubePlayer videoId={videoId} />
-
-        <button onClick={this.continue}>GO</button>
-        <button onClick={this.getNews}>CHECK FOR NEWS UPDATES</button>
-
-        {videoComments.map(comment => (
-          <div key={comment.id} style={{ padding: 10 }}>
-            <div>{comment.author}</div>
-            <div>{comment.text}</div>
-          </div>
-        ))}
-
-        <div>
-          <h2>SoundUrl</h2>
-          {this.state.soundUrl}
+        <div className="VideoContainer">
+          <YoutubePlayer videoId={videoId} />
         </div>
 
-        <div style={{ padding: 20 }}>
-          <h2>Headline</h2>
-          {this.state.todaysArticle.title}
+        <div className="SketchContainer">
+          <Sketch1
+            newReply={replies.length > 0 && replies[n - 1]}
+            newData={lastCBResponse}
+            count={this.state.count}
+          />
         </div>
+
+        <div className="controls">
+          <button onClick={this.continue}>GO</button>
+          <button onClick={this.getNews}>CHECK FOR NEWS UPDATES</button>
+        </div>
+
         <div
           style={{
             padding: 20,
@@ -183,6 +166,21 @@ class App extends Component {
             width: '100%',
           }}
         >
+          {videoComments.map(comment => (
+            <div key={comment.id} style={{ padding: 10 }}>
+              <div>{comment.author}</div>
+              <div>{comment.text}</div>
+            </div>
+          ))}
+
+          <div>
+            <h2>SoundUrl</h2>
+            {this.state.soundUrl}
+          </div>
+          <div style={{ padding: 20 }}>
+            <h2>Headline</h2>
+            {this.state.todaysArticle.title}
+          </div>
           <h2>replies</h2>
           {replies.map((text, i) => (
             <div style={{ textAlign: i % 2 !== 0 && 'right' }}>{text}</div>

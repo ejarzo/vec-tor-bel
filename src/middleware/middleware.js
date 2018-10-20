@@ -114,8 +114,7 @@ export const getCleverbotReply = (query, cs) => {
   const params = {
     key: CLEVERBOT_API_KEY,
     input: query,
-    cs: cs,
-    // interaction_count: prevInteractionCount,
+    // cs: cs,
     cb_settings_emotion: 'yes',
     // cb_settings_tweak1: 50,
     // cb_settings_tweak2: 50,
@@ -129,6 +128,16 @@ export const getNews = () => {
   const params = {
     country: 'us',
     apiKey: NEWS_API_KEY,
+  };
+
+  return fetchApi(url, params);
+};
+
+export const getCensored = text => {
+  const url = 'https://www.purgomalum.com/service/json';
+  const params = {
+    text: text,
+    // fill_char: ''
   };
 
   return fetchApi(url, params);

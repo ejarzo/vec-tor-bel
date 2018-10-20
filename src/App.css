@@ -1,0 +1,17 @@
+.App {
+  height: 100%;
+}
+
+.controls {
+  position: fixed;
+  top: 0;
+  background: #fff;
+}
+.VideoContainer,
+.SketchContainer {
+  top: 0;
+  left: 0;
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+}
