@@ -2,9 +2,20 @@ import React, { Component } from 'react';
 import YouTube from 'react-youtube';
 
 class YoutubePlayer extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isLoaded: false,
+    };
+    this.handleReady = this.handleReady.bind(this);
+  }
+
   handleReady(e) {
     const player = e.target;
     // player.setPlaybackRate(0.5);
+    this.setState({
+      isLoaded: true,
+    });
     player.mute();
   }
 
@@ -29,8 +40,16 @@ class YoutubePlayer extends Component {
       },
     };
 
+    const { isLoaded } = this.state;
     return (
-      <div style={{ height: '100%', transform: 'scale(1.4)' }}>
+      <div
+        style={{
+          transition: 'all 0.5s',
+          opacity: isLoaded ? 1 : 0,
+          height: '100%',
+          transform: 'scale(1.4)',
+        }}
+      >
         <YouTube onReady={this.handleReady} videoId={videoId} opts={options} />
       </div>
     );

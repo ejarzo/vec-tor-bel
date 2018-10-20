@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import './App.css';
 
 import Sketch1 from 'components/p5sketches/Sketch1';
-
+import RovingEye from 'components/RovingEye';
 import YoutubePlayer from 'components/YoutubePlayer';
 import {
   getYoutubeComments,
@@ -135,6 +135,7 @@ class App extends Component {
   render() {
     const { videoId, videoComments, replies, lastCBResponse } = this.state;
     const n = replies.length;
+
     return (
       <div className="App" style={{ paddingBottom: 100 }}>
         <div className="VideoContainer">
@@ -149,6 +150,8 @@ class App extends Component {
           />
         </div>
 
+        <RovingEye />
+
         <div className="controls">
           <button onClick={this.continue}>GO</button>
           <button onClick={this.getNews}>CHECK FOR NEWS UPDATES</button>
@@ -156,12 +159,12 @@ class App extends Component {
 
         <div
           style={{
+            display: 'none',
             padding: 20,
             position: 'fixed',
             bottom: 0,
             maxHeight: 200,
             overflow: 'scroll',
-            background: 'white',
             borderTop: '2px solid gray',
             width: '100%',
           }}

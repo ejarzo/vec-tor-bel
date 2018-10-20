@@ -1,12 +1,13 @@
 .App {
   height: 100%;
+  background: #000;
 }
 
 .controls {
   position: fixed;
   top: 0;
-  background: #fff;
 }
+
 .VideoContainer,
 .SketchContainer {
   top: 0;
@@ -14,4 +15,8 @@
   position: absolute;
   width: 100vw;
   height: 100vh;
+}
+
+button {
+  padding: 20px;
 }
