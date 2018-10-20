@@ -31,7 +31,7 @@ class App extends Component {
 
     this.getNews = this.getNews.bind(this);
     this.getYoutubeData = this.getYoutubeData.bind(this);
-    this.getSounds = this.getSounds.bind(this);
+    this.getSoundUrl = this.getSoundUrl.bind(this);
     this.getCleverbotReply = this.getCleverbotReply.bind(this);
     this.continue = this.continue.bind(this);
   }
@@ -46,10 +46,10 @@ class App extends Component {
     let firstArticle = articles[0];
 
     // search top headline on youtube
-    const [{ videoId, videoComments }] = await Promise.all(
+    const [{ videoId, videoComments }, soundUrl] = await Promise.all([
       this.getYoutubeData(firstArticle.title),
-      this.getSounds(firstArticle.title)
-    );
+      this.getSoundUrl(firstArticle.title),
+    ]);
 
     // initialize with top headline
     this.setState({
@@ -57,17 +57,17 @@ class App extends Component {
       replies: [firstArticle.title],
       videoId,
       videoComments,
+      soundUrl,
     });
   }
 
-  async getSounds(query) {
+  async getSoundUrl(query) {
     const freeSounds = await getFreesounds(query).catch(error => {
       console.log('get sounds error:', error);
     });
-    if (!freeSounds) return;
 
-    const previewUrl = freeSounds[0].previews['preview-hq-mp3'];
-    this.setState({ soundUrl: previewUrl });
+    if (!freeSounds) return '';
+    return getRandomIn(freeSounds).previews['preview-hq-mp3'];
   }
 
   async getYoutubeData(query) {
@@ -111,10 +111,12 @@ class App extends Component {
     console.log('RESULT:', data);
 
     const replies = this.state.replies.slice();
-    const output = data.output;
+    const { output, emotion } = data;
     replies.push(output);
-
-    const { videoId, videoComments } = await this.getYoutubeData(output);
+    const [{ videoId, videoComments }, soundUrl] = await Promise.all([
+      this.getYoutubeData(output),
+      this.getSoundUrl(emotion),
+    ]);
 
     this.setState({
       replies,
@@ -122,8 +124,8 @@ class App extends Component {
       count: this.state.count + 1,
       videoId,
       videoComments,
+      soundUrl,
     });
-    this.getSounds(output);
   }
 
   async getNews() {
