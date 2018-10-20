@@ -3,29 +3,48 @@ const FREESOUND_API_KEY = process.env.REACT_APP_FREESOUND_API_KEY;
 const CLEVERBOT_API_KEY = process.env.REACT_APP_CLEVERBOT_API_KEY;
 const NEWS_API_KEY = process.env.REACT_APP_NEWS_API_KEY;
 
-const fetchApi = (url, params) => {
+const fetchApi = async (url, params) => {
   const esc = encodeURIComponent;
   const query = Object.keys(params)
     .map(k => esc(k) + '=' + esc(params[k]))
     .join('&');
 
-  return fetch(`${url}?${query}`).then(response => response.json());
+  const response = await fetch(`${url}?${query}`);
+  return response.json();
 };
 
-export const getYoutubeResults = query => {
+const fetchYoutubeResults = query => {
   const url = 'https://www.googleapis.com/youtube/v3/search/';
   const params = {
     key: YOUTUBE_API_KEY,
     q: query,
     part: 'snippet',
-    type: 'vide',
+    type: 'video',
     maxResults: 15,
   };
 
   return fetchApi(url, params);
 };
 
-export const getYoutubeComments = videoId => {
+export const getYoutubeVideos = query => {
+  return new Promise((resolve, reject) => {
+    fetchYoutubeResults(query).then(
+      data => {
+        const { items } = data;
+        if (items.length > 0) {
+          resolve(items);
+        } else {
+          reject('No Videos');
+        }
+      },
+      error => {
+        reject(error);
+      }
+    );
+  });
+};
+
+const fetchYoutubeComments = videoId => {
   const url = 'https://www.googleapis.com/youtube/v3/commentThreads/';
   const params = {
     key: YOUTUBE_API_KEY,
@@ -39,7 +58,30 @@ export const getYoutubeComments = videoId => {
   return fetchApi(url, params);
 };
 
-export const getFreesoundResults = query => {
+export const getYoutubeComments = videoId => {
+  return new Promise((resolve, reject) => {
+    fetchYoutubeComments(videoId).then(
+      data => {
+        const { items } = data;
+        if (items && items.length > 0) {
+          const videoComments = items.map(item => ({
+            id: item.id,
+            author: item.snippet.topLevelComment.snippet.authorDisplayName,
+            text: item.snippet.topLevelComment.snippet.textDisplay,
+          }));
+          resolve(videoComments);
+        } else {
+          reject('No Comments');
+        }
+      },
+      error => {
+        reject(error);
+      }
+    );
+  });
+};
+
+export const fetchFreesoundResults = query => {
   const url = 'https://freesound.org/apiv2/search/text/';
   const params = {
     token: FREESOUND_API_KEY,
@@ -48,6 +90,23 @@ export const getFreesoundResults = query => {
   };
 
   return fetchApi(url, params);
+};
+
+export const getFreesounds = query => {
+  return new Promise((resolve, reject) => {
+    fetchFreesoundResults(query).then(
+      ({ results }) => {
+        if (results.length > 0) {
+          resolve(results);
+        } else {
+          reject(`No sounds for "${query}"`);
+        }
+      },
+      error => {
+        reject(error);
+      }
+    );
+  });
 };
 
 export const getCleverbotReply = (query, cs) => {

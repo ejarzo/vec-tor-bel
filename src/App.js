@@ -5,194 +5,165 @@ import Sketch1 from 'components/p5sketches/Sketch1';
 
 import YoutubePlayer from 'components/YoutubePlayer';
 import {
-  getYoutubeResults,
   getYoutubeComments,
-  getFreesoundResults,
+  getFreesounds,
   getCleverbotReply,
   getNews,
+  getYoutubeVideos,
 } from 'middleware/middleware.js';
+
+const getRandomIn = array => array[Math.floor(Math.random() * array.length)];
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
       todaysArticle: '',
+      replies: [],
+      lastCBResponse: { cs: '' },
+      count: 0,
+
       videoId: '',
       videoComments: [],
-      input: 'what is the meaning of life?',
-      output: '',
-      conversationHistory: '',
-      conversation: [],
-      count: 0,
+
+      soundUrl: '',
     };
 
-    this.getYoutubeResults = this.getYoutubeResults.bind(this);
-    this.getYoutubeComments = this.getYoutubeComments.bind(this);
-    this.getFreesoundResults = this.getFreesoundResults.bind(this);
-    this.getCleverbotReply = this.getCleverbotReply.bind(this);
     this.getNews = this.getNews.bind(this);
+    this.getYoutubeData = this.getYoutubeData.bind(this);
+    this.getSounds = this.getSounds.bind(this);
+    this.getCleverbotReply = this.getCleverbotReply.bind(this);
     this.continue = this.continue.bind(this);
   }
 
-  componentDidMount() {
-    getNews().then(
-      data => {
-        console.log('top headline');
-        const { articles } = data;
-        const firstArticle = articles[0];
-        this.setState({
-          todaysArticle: firstArticle,
-          conversation: [firstArticle.title],
-        });
-      },
-      error => {
-        console.log('error', error);
-      }
+  async componentDidMount() {
+    const { articles } = await getNews().catch(error => {
+      // TODO: handle get news error
+      console.log('error getting news', error);
+    });
+    if (!articles) return;
+
+    let firstArticle = articles[0];
+
+    // search top headline on youtube
+    const [{ videoId, videoComments }] = await Promise.all(
+      this.getYoutubeData(firstArticle.title),
+      this.getSounds(firstArticle.title)
     );
+
+    // initialize with top headline
+    this.setState({
+      todaysArticle: firstArticle,
+      replies: [firstArticle.title],
+      videoId,
+      videoComments,
+    });
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    // if (prevState.input !== this.state.input) {
-    //   // this.getYoutubeResults();
-    //   // this.getCleverbotReply(this.state.input);
-    // }
-    // if (prevState.output !== this.state.output) {
-    //   this.getYoutubeResults();
-    //   console.log(this.state.output);
-    // }
+  async getSounds(query) {
+    const freeSounds = await getFreesounds(query).catch(error => {
+      console.log('get sounds error:', error);
+    });
+    if (!freeSounds) return;
+
+    const previewUrl = freeSounds[0].previews['preview-hq-mp3'];
+    this.setState({ soundUrl: previewUrl });
+  }
+
+  async getYoutubeData(query) {
+    let videoId = '';
+    let videoComments = [];
+    console.log('===========');
+    console.log('Searching Youtube for', query);
+    const videos = await getYoutubeVideos(query).catch(error => {
+      // TODO: handle no videos
+      console.log('error');
+      console.log(error);
+    });
+    console.log('videos:', videos);
+    if (!videos) return { videoId, videoComments };
+
+    const randomVideo = getRandomIn(videos);
+    videoId = randomVideo.id.videoId;
+
+    console.log(videoId);
+    videoComments = await getYoutubeComments(videoId).catch(error => {
+      // TODO: handle no comments
+      return [];
+    });
+
+    return { videoId, videoComments };
   }
 
   continue() {
-    this.getCleverbotReply(this.state.conversation[0]);
+    const { replies } = this.state;
+    this.getCleverbotReply(replies[replies.length - 1]);
   }
 
-  getYoutubeResults(output) {
-    console.log('=========== searching youtube for ===========', output);
+  async getCleverbotReply(query) {
+    const { lastCBResponse } = this.state;
 
-    getYoutubeResults(output).then(data => {
-      const { items: videos } = data;
-      if (videos.length > 0) {
-        const videoId =
-          videos[Math.floor(Math.random() * videos.length)].id.videoId;
-        this.setState({ videoId });
-        this.getYoutubeComments(videoId);
-      } else {
-        console.log('No videos');
-      }
-    });
-  }
-
-  getYoutubeComments(videoId) {
-    getYoutubeComments(videoId).then(data => {
-      console.log(data);
-      const { items } = data;
-      if (items && items.length > 0) {
-        const videoComments = items.map(item => ({
-          id: item.id,
-          author: item.snippet.topLevelComment.snippet.authorDisplayName,
-          text: item.snippet.topLevelComment.snippet.textDisplay,
-        }));
-        this.setState({ videoComments });
-        if (this.state.count % 3 === 0) {
-          const conversation = this.state.conversation.slice();
-          conversation.push(videoComments[0].text);
-          this.setState({
-            conversation,
-          });
-        }
-      } else {
-        console.log('No Comments');
-      }
-    });
-  }
-
-  getFreesoundResults() {
-    const query =
-      this.state.videoComments.length > 0
-        ? this.state.videoComments[0].text.split(' ')[0]
-        : 'slomo';
-
-    getFreesoundResults(query).then(
-      data => {
-        const { results } = data;
-        if (results.length <= 0) {
-          console.log('NO SOUNDS for', query);
-        } else {
-          const first = data.results.length > 0 && data.results[0];
-          const previewUrl = first.previews['preview-hq-mp3'];
-          console.log(previewUrl);
-        }
-      },
-      error => {
-        console.log('error', error);
-      }
-    );
-  }
-
-  getCleverbotReply(query) {
-    const { output, conversationHistory } = this.state;
-
+    console.log('===========================');
     console.log('searching cleverbot for...');
-    console.log(output);
+    console.log(query);
 
-    getCleverbotReply(output, conversationHistory).then(
-      data => {
-        console.log(data);
-        const conversation = this.state.conversation.slice();
-        conversation.push(data.output);
-        this.setState({
-          conversation,
-        });
-        this.setState({
-          conversation,
-          conversationHistory: data.cs,
-          count: this.state.count + 1,
-        });
-        this.getYoutubeResults(data.output);
-      },
-      error => {
-        console.log('error', error);
-      }
-    );
+    const data = await getCleverbotReply(query, lastCBResponse.cs);
+    console.log('RESULT:', data);
+
+    const replies = this.state.replies.slice();
+    const output = data.output;
+    replies.push(output);
+
+    const { videoId, videoComments } = await this.getYoutubeData(output);
+
+    this.setState({
+      replies,
+      lastCBResponse: data,
+      count: this.state.count + 1,
+      videoId,
+      videoComments,
+    });
+    this.getSounds(output);
   }
 
-  getNews() {
-    getNews().then(
-      data => {
-        if (data.articles[0].title !== this.state.todaysArticle.title) {
-          console.log('NEW HEADLINE');
-          console.log(data.articles[0].title);
-        } else {
-          console.log('same title');
-          console.log(data.articles[0].title);
-          console.log(this.state.todaysArticle.title);
-        }
-      },
-      error => {
-        console.log('error', error);
-      }
-    );
+  async getNews() {
+    const { articles } = await getNews();
+    if (articles[0].title !== this.state.todaysArticle.title) {
+      console.log('NEW HEADLINE');
+      console.log(articles[0].title);
+    } else {
+      console.log('same title');
+      console.log(articles[0].title);
+      console.log(this.state.todaysArticle.title);
+    }
   }
 
   render() {
-    const { videoId, videoComments, conversation } = this.state;
-    console.log(videoComments);
+    const { videoId, videoComments, replies } = this.state;
+    const n = replies.length;
     return (
-      <div className="App">
-        {/* <Sketch1 /> */}
+      <div className="App" style={{ paddingBottom: 100 }}>
+        <Sketch1
+          currReply={replies.length > 0 && replies[n - 1]}
+          prevReply={replies.length > 1 && replies[n - 2]}
+          count={this.state.count}
+        />
         <YoutubePlayer videoId={videoId} />
+
         <button onClick={this.continue}>GO</button>
         <button onClick={this.getNews}>CHECK FOR NEWS UPDATES</button>
-        {/*<button onClick={this.getYoutubeResults}>fetch</button>
-        <button onClick={this.getFreesoundResults}>fetch sounds</button>
-        <button onClick={this.getCleverbotReply}>fetch cleverbot</button>
-        <button onClick={this.getNews}>Get News</button>*/}
+
         {videoComments.map(comment => (
           <div key={comment.id} style={{ padding: 10 }}>
             <div>{comment.author}</div>
             <div>{comment.text}</div>
           </div>
         ))}
+
+        <div>
+          <h2>SoundUrl</h2>
+          {this.state.soundUrl}
+        </div>
 
         <div style={{ padding: 20 }}>
           <h2>Headline</h2>
@@ -210,8 +181,8 @@ class App extends Component {
             width: '100%',
           }}
         >
-          <h2>Conversation</h2>
-          {conversation.map((text, i) => (
+          <h2>replies</h2>
+          {replies.map((text, i) => (
             <div style={{ textAlign: i % 2 !== 0 && 'right' }}>{text}</div>
           ))}
         </div>

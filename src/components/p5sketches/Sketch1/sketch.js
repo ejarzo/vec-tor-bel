@@ -1,6 +1,9 @@
 export default function sketch(p) {
-  const width = 1000;
-  const height = 1000;
+  const width = 800;
+  const height = 200;
+
+  let leftReply = '';
+  let rightReply = '';
 
   p.setup = function() {
     p.createCanvas(width, height);
@@ -8,10 +11,19 @@ export default function sketch(p) {
   };
 
   p.myCustomRedrawAccordingToNewPropsHandler = props => {
-    console.log(props);
+    const { currReply, prevReply, count } = props;
+    if (count % 2) {
+      rightReply = currReply || '';
+    } else {
+      leftReply = currReply || '';
+    }
   };
 
   p.draw = () => {
-    p.rect(0, 0, 20, 20);
+    p.background(255);
+    p.textAlign(p.LEFT);
+    p.text(leftReply, 20, 30);
+    p.textAlign(p.RIGHT);
+    p.text(rightReply, width - 20, 30);
   };
 }
