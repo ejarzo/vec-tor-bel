@@ -4,8 +4,8 @@ const convertRange = (value, r1, r2) =>
   ((value - r1[0]) * (r2[1] - r2[0])) / (r1[1] - r1[0]) + r2[0];
 
 export default function sketch(p) {
-  const width = 800;
-  const height = 700;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
 
   const replyData = {
     reply: '',

@@ -82,6 +82,7 @@ class App extends Component {
     if (!videos) return { videoId, videoComments };
 
     const randomVideo = getRandomIn(videos);
+    console.log('video data...', randomVideo);
     videoId = randomVideo.id.videoId;
     videoComments = await getYoutubeComments(videoId).catch(error => {
       // TODO: handle no comments
@@ -142,6 +143,18 @@ class App extends Component {
           <YoutubePlayer videoId={videoId} />
         </div>
 
+        <RovingEye />
+
+        <div
+          style={{
+            mixBlendMode: 'lighten',
+            position: 'absolute',
+            width: '100vw',
+            height: '100vh',
+            background: 'rgb(70,20,100)',
+          }}
+        />
+
         <div className="SketchContainer">
           <Sketch1
             newReply={replies.length > 0 && replies[n - 1]}
@@ -149,8 +162,6 @@ class App extends Component {
             count={this.state.count}
           />
         </div>
-
-        <RovingEye />
 
         <div className="controls">
           <button onClick={this.continue}>GO</button>
