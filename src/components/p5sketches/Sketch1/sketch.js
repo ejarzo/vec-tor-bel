@@ -1,4 +1,4 @@
-import { emotionGraphNoiseAmounts } from 'data/utils';
+import { emotionGraphNoiseAmounts } from 'utils/data';
 
 const convertRange = (value, r1, r2) =>
   ((value - r1[0]) * (r2[1] - r2[0])) / (r1[1] - r1[0]) + r2[0];
@@ -30,7 +30,6 @@ export default function sketch(p) {
 
   p.myCustomRedrawAccordingToNewPropsHandler = props => {
     const { newReply, newData } = props;
-    console.log(newReply, newData);
     const {
       emotion,
       emotion_degree: emotionDegree,
@@ -46,8 +45,6 @@ export default function sketch(p) {
       y: r * Math.sin(theta) + height / 2,
     };
 
-    console.log('target point', targetPoint);
-    console.log('left data', replyData);
     count = interactionCount;
     replyData.emotion = emotion;
     replyData.reply = newReply || '';
@@ -56,7 +53,7 @@ export default function sketch(p) {
   // let percentage = 0;
   p.draw = () => {
     if (replyData.reply !== lastReply) {
-      p.fill(0);
+      p.fill(255);
       p.textAlign(p.CENTER);
       p.text(replyData.reply, targetPoint.x || 20, targetPoint.y || 20);
     }

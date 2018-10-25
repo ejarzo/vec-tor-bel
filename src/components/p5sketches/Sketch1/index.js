@@ -18,7 +18,11 @@ class Sketch1 extends Component {
   render() {
     const { width, height } = this.state;
     if (!width) return null;
-    return <P5Wrapper sketch={sketch} {...this.props} />;
+    return (
+      <div style={{ mixBlendMode: false && 'multiply' }}>
+        <P5Wrapper sketch={sketch} {...this.props} />
+      </div>
+    );
   }
 }
 

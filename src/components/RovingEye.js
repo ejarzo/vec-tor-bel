@@ -23,7 +23,7 @@ class RovingEye extends Component {
     this.state = {
       width: null,
       height: null,
-      scale: 2,
+      scale: 4,
       translateX: 0,
       translateY: 0,
     };
@@ -36,15 +36,27 @@ class RovingEye extends Component {
     const viewHeight = window.innerHeight;
     this.setState({ width: viewWidth, height: viewHeight });
     const that = this;
-    (function loop() {
-      var rand = Math.round(Math.random() * (3000 - 500)) + 500;
-      setTimeout(() => {
-        that.setState({
-          scale: Math.random() * 3 + 2,
-        });
-        loop();
-      }, rand);
-    })();
+    const maxTime = 5000;
+    const minTime = 1000;
+    // (function loop() {
+    //   var rand = Math.round(Math.random() * (maxTime - minTime)) + minTime;
+    //   setTimeout(() => {
+    //     that.setState({
+    //       scale: Math.random() * 3 + 1,
+    //     });
+    //     loop();
+    //   }, rand);
+    // })();
+    // (function loop() {
+    //   var rand = Math.round(Math.random() * (3000 - 500)) + 500;
+    //   setTimeout(() => {
+    //     that.setState({
+    //       translateX: Math.random() * 20 - 10,
+    //       translateY: Math.random() * 20 - 10,
+    //     });
+    //     loop();
+    //   }, rand);
+    // })();
   }
 
   initCanvas(canvas) {

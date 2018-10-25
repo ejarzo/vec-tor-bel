@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import './App.css';
-
 import Sketch1 from 'components/p5sketches/Sketch1';
 import RovingEye from 'components/RovingEye';
 import YoutubePlayer from 'components/YoutubePlayer';
@@ -10,6 +9,7 @@ import {
   getCleverbotReply,
   getNews,
   getYoutubeVideos,
+  getLanguage,
 } from 'middleware/middleware.js';
 
 const getRandomIn = array => array[Math.floor(Math.random() * array.length)];
@@ -23,20 +23,38 @@ class App extends Component {
       lastCBResponse: { cs: '' },
       count: 0,
 
+      voices: [],
+      currentVoice: null,
+
       videoId: '',
       videoComments: [],
 
       soundUrl: '',
+
+      filterColor: 'rgb(255,255,255)',
+      youtubeBlurAmount: 100,
     };
 
+    this.begin = this.begin.bind(this);
+    this.speak = this.speak.bind(this);
+
     this.getNews = this.getNews.bind(this);
+    this.getVoices = this.getVoices.bind(this);
     this.getYoutubeData = this.getYoutubeData.bind(this);
     this.getSoundUrl = this.getSoundUrl.bind(this);
-    this.getCleverbotReply = this.getCleverbotReply.bind(this);
-    this.continue = this.continue.bind(this);
+    this.getNextReply = this.getNextReply.bind(this);
   }
 
   async componentDidMount() {
+    if (
+      typeof speechSynthesis !== 'undefined' &&
+      speechSynthesis.onvoiceschanged !== undefined
+    ) {
+      speechSynthesis.onvoiceschanged = this.getVoices;
+    }
+  }
+
+  async begin() {
     const { articles } = await getNews().catch(error => {
       console.log(error);
       return {};
@@ -52,6 +70,7 @@ class App extends Component {
       this.getSoundUrl(initArticle.title),
     ]);
 
+    this.speak(initArticle.title);
     // initialize with top headline
     this.setState({
       todaysArticle: initArticle,
@@ -60,6 +79,44 @@ class App extends Component {
       videoComments,
       soundUrl,
     });
+  }
+
+  getVoices() {
+    if (typeof speechSynthesis === 'undefined') {
+      return;
+    }
+
+    const voices = speechSynthesis.getVoices();
+    this.setState({ voices });
+    return voices;
+  }
+
+  async speak(input) {
+    if (this.state.voices.length === 0) {
+      console.log('no voice yet');
+      return;
+    }
+    console.log('should be speaking', input);
+    // const languageCode = await getLanguage(input);
+    // const voice = this.state.voices.find(
+    //   voice => voice.lang.slice(0, 2) === languageCode
+    // );
+
+    const synth = window.speechSynthesis;
+    const utterThis = new SpeechSynthesisUtterance(input);
+    // utterThis.pitch = 0.5;
+    // utterThis.rate = 0.5;
+    console.log(utterThis);
+    // utterThis.voice = this.state.currentVoice;
+    synth.speak(utterThis);
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.voices.length === 0 && this.state.voices.length > 0) {
+      this.setState({
+        currentVoice: this.state.voices[67],
+      });
+    }
   }
 
   async getSoundUrl(query) {
@@ -76,9 +133,10 @@ class App extends Component {
     let videoComments = [];
     const videos = await getYoutubeVideos(query).catch(error => {
       // TODO: handle no videos
-      console.log('error');
+      console.log('error getting videos');
       console.log(error);
     });
+
     if (!videos) return { videoId, videoComments };
 
     const randomVideo = getRandomIn(videos);
@@ -92,33 +150,63 @@ class App extends Component {
     return { videoId, videoComments };
   }
 
-  continue() {
-    const { replies } = this.state;
-    this.getCleverbotReply(replies[replies.length - 1]);
-  }
+  async getNextReply() {
+    const { replies, videoComments, lastCBResponse, count } = this.state;
 
-  async getCleverbotReply(query) {
-    const { lastCBResponse } = this.state;
-    console.log(query);
+    const prevReply = replies[replies.length - 1];
+    const nextReplies = replies.slice();
 
-    const data = await getCleverbotReply(query, lastCBResponse.cs);
-    const replies = this.state.replies.slice();
-    const { output, emotion } = data;
+    if (
+      (replies.length === 2 || replies.length % 20 === 0) &&
+      videoComments.length > 0
+    ) {
+      // get comment reply
+      const { text, author } = videoComments[0];
 
-    replies.push(output);
-    const [{ videoId, videoComments }, soundUrl] = await Promise.all([
-      this.getYoutubeData(output),
-      this.getSoundUrl(emotion),
-    ]);
+      const nextReply = text;
 
-    this.setState({
-      replies,
-      lastCBResponse: data,
-      count: this.state.count + 1,
-      videoId,
-      videoComments,
-      soundUrl,
-    });
+      nextReplies.push(text);
+
+      const [
+        { videoId, videoComments: nextVideoComments },
+        soundUrl,
+      ] = await Promise.all([
+        this.getYoutubeData(nextReply),
+        this.getSoundUrl(nextReply),
+      ]);
+
+      this.setState({
+        replies: nextReplies,
+        count: this.state.count + 1,
+        videoId,
+        videoComments: nextVideoComments,
+        soundUrl,
+        showCommentOverlay: true,
+      });
+      this.speak(text);
+    } else {
+      // Get cleverbot response
+      const cleverbotResponse = await getCleverbotReply(prevReply);
+      const nextReply = cleverbotResponse.output;
+      nextReplies.push(nextReply);
+      // const nextEmotion = cleverbotResponse.emotion;
+
+      const [{ videoId, videoComments }, soundUrl] = await Promise.all([
+        this.getYoutubeData(nextReply),
+        this.getSoundUrl(nextReply),
+      ]);
+
+      this.setState({
+        replies: nextReplies,
+        lastCBResponse: cleverbotResponse,
+        count: this.state.count + 1,
+        videoId,
+        videoComments,
+        soundUrl,
+        showCommentOverlay: false,
+      });
+      this.speak(nextReply);
+    }
   }
 
   async getNews() {
@@ -134,24 +222,40 @@ class App extends Component {
   }
 
   render() {
-    const { videoId, videoComments, replies, lastCBResponse } = this.state;
+    const {
+      videoId,
+      videoComments,
+      replies,
+      lastCBResponse,
+      youtubeBlurAmount,
+    } = this.state;
     const n = replies.length;
+
+    if (!this.state.currentVoice) {
+      return null;
+    }
 
     return (
       <div className="App" style={{ paddingBottom: 100 }}>
         <div className="VideoContainer">
-          <YoutubePlayer videoId={videoId} />
+          <YoutubePlayer
+            getNextReply={this.getNextReply}
+            count={n}
+            blurAmount={youtubeBlurAmount}
+            videoId={videoId}
+          />
         </div>
 
-        <RovingEye />
+        {/*<RovingEye />*/}
 
         <div
           style={{
-            mixBlendMode: 'lighten',
+            mixBlendMode: 'multiply',
+            transition: 'all 0.5s',
             position: 'absolute',
             width: '100vw',
             height: '100vh',
-            background: 'rgb(70,20,100)',
+            background: this.state.filterColor,
           }}
         />
 
@@ -163,9 +267,43 @@ class App extends Component {
           />
         </div>
 
+        {this.state.showCommentOverlay && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              color: 'white',
+              fontSize: '10em',
+            }}
+          >
+            {replies[n - 1]}
+          </div>
+        )}
         <div className="controls">
-          <button onClick={this.continue}>GO</button>
+          <button onClick={this.begin}>BEGIN</button>
+          <button onClick={this.getNextReply}>GO</button>
           <button onClick={this.getNews}>CHECK FOR NEWS UPDATES</button>
+          <button
+            onClick={() => {
+              this.setState({
+                youtubeBlurAmount: Math.random() * 50,
+              });
+            }}
+          >
+            RANDOM BLUR
+          </button>
+          <button
+            onClick={() => {
+              const r = Math.random() * 255;
+              const g = Math.random() * 255;
+              const b = Math.random() * 255;
+              this.setState({
+                filterColor: `rgb(${r},${g},${b})`,
+              });
+            }}
+          >
+            RANDOM COLOR
+          </button>
         </div>
 
         <div
@@ -197,13 +335,28 @@ class App extends Component {
           </div>
           <h2>replies</h2>
           {replies.map((text, i) => (
-            <div style={{ textAlign: i % 2 !== 0 && 'right' }}>{text}</div>
+            <div key={text} style={{ textAlign: i % 2 !== 0 && 'right' }}>
+              {text}
+            </div>
           ))}
         </div>
         <div style={{ padding: 20 }}>
           <h2>Count</h2>
           {this.state.count}
         </div>
+        {this.state.replies[0] && (
+          <marquee
+            style={{
+              width: '100%',
+              position: 'fixed',
+              bottom: 0,
+              color: 'white',
+              fontSize: '3em',
+            }}
+          >
+            {this.state.replies[0]}
+          </marquee>
+        )}
       </div>
     );
   }

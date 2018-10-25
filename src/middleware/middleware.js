@@ -2,6 +2,7 @@ const YOUTUBE_API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
 const FREESOUND_API_KEY = process.env.REACT_APP_FREESOUND_API_KEY;
 const CLEVERBOT_API_KEY = process.env.REACT_APP_CLEVERBOT_API_KEY;
 const NEWS_API_KEY = process.env.REACT_APP_NEWS_API_KEY;
+const LANGUAGE_LAYER_API_KEY = process.env.REACT_APP_LANGUAGE_LAYER_API_KEY;
 
 const fetchApi = async (url, params) => {
   const esc = encodeURIComponent;
@@ -141,4 +142,20 @@ export const getCensored = text => {
   };
 
   return fetchApi(url, params);
+};
+
+export const getLanguage = async query => {
+  const url = 'http://apilayer.net/api/detect';
+  const params = {
+    access_key: LANGUAGE_LAYER_API_KEY,
+    query: query,
+  };
+  try {
+    const { results } = await fetchApi(url, params);
+    console.log(results);
+    const firstResult = results[0];
+    return firstResult.reliable_result ? firstResult.language_code : 'en';
+  } catch (error) {
+    return 'en';
+  }
 };
