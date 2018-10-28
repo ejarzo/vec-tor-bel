@@ -30,6 +30,12 @@ export default function sketch(p) {
 
   p.myCustomRedrawAccordingToNewPropsHandler = props => {
     const { newReply, newData } = props;
+    if (!newReply) {
+      return;
+    }
+    if (newReply.source === 'comment' || newReply.source === 'news') {
+      return;
+    }
     const {
       emotion,
       emotion_degree: emotionDegree,
@@ -47,7 +53,7 @@ export default function sketch(p) {
 
     count = interactionCount;
     replyData.emotion = emotion;
-    replyData.reply = newReply || '';
+    replyData.reply = newReply.text || '';
   };
 
   // let percentage = 0;
@@ -70,8 +76,8 @@ export default function sketch(p) {
     const yDiff = targetPoint.y - replyData.y;
     const xDiff = targetPoint.x - replyData.x;
 
-    replyData.x = replyData.x + (xDiff / 100 + xMod);
-    replyData.y = replyData.y + (yDiff / 100 + yMod);
+    replyData.x = replyData.x + (xDiff / 50 + xMod);
+    replyData.y = replyData.y + (yDiff / 50 + yMod);
 
     p.rect(replyData.x, replyData.y, 3, 3);
 

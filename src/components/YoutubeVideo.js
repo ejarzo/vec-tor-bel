@@ -12,36 +12,25 @@ class YoutubeVideo extends Component {
     this.handleStateChange = this.handleStateChange.bind(this);
   }
 
-  // componentDidMount() {}
-
   handleReady(e) {
     const player = e.target;
-    // player.setPlaybackRate(0.5);
-    this.setState({
-      isVisible: true,
-    });
-    console.log('DURATION');
-    console.log(player.getDuration());
-    // player.mute();
+    player.mute();
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.videoId !== this.props.videoId) {
-      // this.setState({
-      //   isVisible: false,
-      // });
-      setTimeout(() => {
-        this.setState({
-          videoId: this.props.videoId,
-          isVisible: true,
-        });
-      }, 1000);
-    }
+    // if (prevProps.videoId !== this.props.videoId) {
+    //   this.setState({
+    //     isVisible: false,
+    //   });
+    //   setTimeout(() => {
+    //     this.setState({
+    //       videoId: this.props.videoId,
+    //     });
+    //   }, 10000);
+    // }
   }
 
   handleStateChange(e) {
-    console.log(e);
-    console.log('stateChange');
     /*
       -1: unstarted
       0: ended
@@ -59,10 +48,13 @@ class YoutubeVideo extends Component {
         isVisible: false,
       });
     }
+    console.log('DURATION');
+    console.log(e.target.getDuration());
   }
+
   render() {
-    const { blurAmount, options, isTop } = this.props;
-    const { isVisible, videoId } = this.state;
+    const { blurAmount, options, isTop, videoId } = this.props;
+    const { isVisible } = this.state;
 
     return (
       <div
@@ -72,7 +64,7 @@ class YoutubeVideo extends Component {
           width: '100vw',
           mixBlendMode: isTop && 'multiply',
           // transform: `scale3d(${scale}, ${scale}, 1) translate(${translateX}%, ${translateY}%)`,
-          transition: 'all 1s',
+          transition: 'filter 1s',
           opacity: isVisible ? 1 : 0,
           height: '100%',
           transform: 'scale(1.4)',

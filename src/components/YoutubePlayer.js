@@ -54,7 +54,7 @@ class YoutubePlayer extends Component {
       console.log('UPDATE', prevProps.videoId, this.props.videoId);
       // setTimeout(this.props.getNextReply, 5000);
 
-      if (this.props.count % 2) {
+      if (this.props.count % 2 === 0) {
         this.setState({
           topVideoId: this.props.videoId,
         });
@@ -65,31 +65,22 @@ class YoutubePlayer extends Component {
       }
     }
   }
-  // handleReady(e) {
-  //   const player = e.target;
-  //   // player.setPlaybackRate(0.5);
-  //   this.setState({
-  //     isLoaded: true,
-  //   });
-  //   player.mute();
-  // }
 
   render() {
-    const { blurAmount } = this.props;
+    const { blurAmount1, blurAmount2 } = this.props;
     const { topVideoId, bottomVideoId } = this.state;
-    console.log(blurAmount);
-    // const { scale, translateX, translateY, isLoaded } = this.state;
+
     return (
       <div>
         <YoutubeVideo
-          blurAmount={1}
           videoId={bottomVideoId}
+          blurAmount={blurAmount1}
           options={options}
         />
         <YoutubeVideo
           isTop
-          blurAmount={1}
           videoId={topVideoId}
+          blurAmount={blurAmount2}
           options={options}
         />
       </div>

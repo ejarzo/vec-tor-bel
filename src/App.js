@@ -2,7 +2,10 @@ import React, { Component } from 'react';
 import './App.css';
 import Sketch1 from 'components/p5sketches/Sketch1';
 import RovingEye from 'components/RovingEye';
+import NewsHeadline from 'components/NewsHeadline';
 import YoutubePlayer from 'components/YoutubePlayer';
+import AudioPlayer from 'components/AudioPlayer';
+import EmotionManager from 'utils/EmotionManager';
 import {
   getYoutubeComments,
   getFreesounds,
@@ -11,8 +14,21 @@ import {
   getYoutubeVideos,
   getLanguage,
 } from 'middleware/middleware.js';
+const em = new EmotionManager();
 
 const getRandomIn = array => array[Math.floor(Math.random() * array.length)];
+/* hex to rgb and vice versa */
+function componentToHex(c) {
+  var hex = c.toString(16);
+  return hex.length == 1 ? '0' + hex : hex;
+}
+const rgbToHex = col => {
+  var r = col.r;
+  var g = col.g;
+  var b = col.b;
+
+  return '#' + componentToHex(r) + componentToHex(g) + componentToHex(b);
+};
 
 class App extends Component {
   constructor(props) {
@@ -32,7 +48,8 @@ class App extends Component {
       soundUrl: '',
 
       filterColor: 'rgb(255,255,255)',
-      youtubeBlurAmount: 100,
+      youtubeBlurAmount1: 0,
+      youtubeBlurAmount2: 0,
     };
 
     this.begin = this.begin.bind(this);
@@ -62,7 +79,8 @@ class App extends Component {
     });
     if (!articles) return;
 
-    let initArticle = getRandomIn(articles);
+    // let initArticle = getRandomIn(articles);
+    let initArticle = articles[0];
 
     // search top headline on youtube
     const [{ videoId, videoComments }, soundUrl] = await Promise.all([
@@ -74,7 +92,7 @@ class App extends Component {
     // initialize with top headline
     this.setState({
       todaysArticle: initArticle,
-      replies: [initArticle.title],
+      replies: [{ text: initArticle.title, source: 'news' }],
       videoId,
       videoComments,
       soundUrl,
@@ -96,7 +114,6 @@ class App extends Component {
       console.log('no voice yet');
       return;
     }
-    console.log('should be speaking', input);
     // const languageCode = await getLanguage(input);
     // const voice = this.state.voices.find(
     //   voice => voice.lang.slice(0, 2) === languageCode
@@ -106,6 +123,17 @@ class App extends Component {
     const utterThis = new SpeechSynthesisUtterance(input);
     // utterThis.pitch = 0.5;
     // utterThis.rate = 0.5;
+    utterThis.onend = () => {
+      console.log('DONE SPEAKING');
+      this.setState({ showCommentOverlay: false });
+      const maxTimeUntilNextResponse = 5 * 1000;
+      const minTimeUntilNextResponse = 1 * 1000;
+
+      setTimeout(
+        this.getNextReply,
+        Math.random() * maxTimeUntilNextResponse + minTimeUntilNextResponse
+      );
+    };
     console.log(utterThis);
     // utterThis.voice = this.state.currentVoice;
     synth.speak(utterThis);
@@ -152,6 +180,7 @@ class App extends Component {
 
   async getNextReply() {
     const { replies, videoComments, lastCBResponse, count } = this.state;
+    console.log('get next reply', 'prev reply:', replies[replies.length - 1]);
 
     const prevReply = replies[replies.length - 1];
     const nextReplies = replies.slice();
@@ -162,10 +191,9 @@ class App extends Component {
     ) {
       // get comment reply
       const { text, author } = videoComments[0];
-
       const nextReply = text;
 
-      nextReplies.push(text);
+      nextReplies.push({ text, source: 'comment' });
 
       const [
         { videoId, videoComments: nextVideoComments },
@@ -180,31 +208,43 @@ class App extends Component {
         count: this.state.count + 1,
         videoId,
         videoComments: nextVideoComments,
-        soundUrl,
         showCommentOverlay: true,
       });
+
+      if (soundUrl) {
+        this.setState({
+          soundUrl,
+        });
+      }
       this.speak(text);
     } else {
       // Get cleverbot response
-      const cleverbotResponse = await getCleverbotReply(prevReply);
+      const cleverbotResponse = await getCleverbotReply(prevReply.text);
       const nextReply = cleverbotResponse.output;
-      nextReplies.push(nextReply);
-      // const nextEmotion = cleverbotResponse.emotion;
+      nextReplies.push({ text: nextReply, source: 'cleverbot' });
 
       const [{ videoId, videoComments }, soundUrl] = await Promise.all([
         this.getYoutubeData(nextReply),
         this.getSoundUrl(nextReply),
       ]);
 
+      const emotion = cleverbotResponse.emotion;
+      const emotionColor = rgbToHex(em.getColorForEmotion(emotion));
+      const emotionSoundUrl = !soundUrl && (await this.getSoundUrl(emotion));
       this.setState({
         replies: nextReplies,
         lastCBResponse: cleverbotResponse,
         count: this.state.count + 1,
         videoId,
         videoComments,
-        soundUrl,
         showCommentOverlay: false,
+        filterColor: emotionColor,
       });
+      if (soundUrl || emotionSoundUrl) {
+        this.setState({
+          soundUrl: soundUrl || emotionSoundUrl,
+        });
+      }
       this.speak(nextReply);
     }
   }
@@ -214,6 +254,29 @@ class App extends Component {
     if (articles[0].title !== this.state.todaysArticle.title) {
       console.log('NEW HEADLINE');
       console.log(articles[0].title);
+
+      // let initArticle = getRandomIn(articles);
+      let initArticle = articles[0];
+
+      // search top headline on youtube
+      const [{ videoId, videoComments }, soundUrl] = await Promise.all([
+        this.getYoutubeData(initArticle.title),
+        this.getSoundUrl(initArticle.title),
+      ]);
+
+      this.speak(initArticle.title);
+      // initialize with top headline
+      this.setState({
+        todaysArticle: initArticle,
+        replies: [{ text: initArticle.title, source: 'news' }],
+        videoId,
+        videoComments,
+      });
+      if (soundUrl) {
+        this.setState({
+          soundUrl,
+        });
+      }
     } else {
       console.log('same title');
       console.log(articles[0].title);
@@ -227,9 +290,13 @@ class App extends Component {
       videoComments,
       replies,
       lastCBResponse,
-      youtubeBlurAmount,
+      youtubeBlurAmount1,
+      youtubeBlurAmount2,
+      showCommentOverlay,
+      soundUrl,
     } = this.state;
     const n = replies.length;
+    const latestReply = replies[n - 1];
 
     if (!this.state.currentVoice) {
       return null;
@@ -241,7 +308,8 @@ class App extends Component {
           <YoutubePlayer
             getNextReply={this.getNextReply}
             count={n}
-            blurAmount={youtubeBlurAmount}
+            blurAmount1={youtubeBlurAmount1}
+            blurAmount2={youtubeBlurAmount2}
             videoId={videoId}
           />
         </div>
@@ -250,7 +318,7 @@ class App extends Component {
 
         <div
           style={{
-            mixBlendMode: 'multiply',
+            mixBlendMode: 'hue',
             transition: 'all 0.5s',
             position: 'absolute',
             width: '100vw',
@@ -260,25 +328,28 @@ class App extends Component {
         />
 
         <div className="SketchContainer">
-          <Sketch1
-            newReply={replies.length > 0 && replies[n - 1]}
-            newData={lastCBResponse}
-            count={this.state.count}
-          />
+          {latestReply && (
+            <Sketch1
+              newReply={latestReply}
+              newData={lastCBResponse}
+              count={this.state.count}
+            />
+          )}
         </div>
 
-        {this.state.showCommentOverlay && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              color: 'white',
-              fontSize: '10em',
-            }}
-          >
-            {replies[n - 1]}
-          </div>
-        )}
+        {latestReply &&
+          showCommentOverlay && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                color: 'white',
+                fontSize: '10em',
+              }}
+            >
+              {latestReply.text}
+            </div>
+          )}
         <div className="controls">
           <button onClick={this.begin}>BEGIN</button>
           <button onClick={this.getNextReply}>GO</button>
@@ -286,11 +357,30 @@ class App extends Component {
           <button
             onClick={() => {
               this.setState({
-                youtubeBlurAmount: Math.random() * 50,
+                youtubeBlurAmount1: 0,
+                youtubeBlurAmount2: 0,
               });
             }}
           >
-            RANDOM BLUR
+            CLEAR BLUR
+          </button>
+          <button
+            onClick={() => {
+              this.setState({
+                youtubeBlurAmount1: Math.random() * 50,
+              });
+            }}
+          >
+            RANDOM BLUR 1
+          </button>
+          <button
+            onClick={() => {
+              this.setState({
+                youtubeBlurAmount2: Math.random() * 50,
+              });
+            }}
+          >
+            RANDOM BLUR 2
           </button>
           <button
             onClick={() => {
@@ -327,14 +417,14 @@ class App extends Component {
 
           <div>
             <h2>SoundUrl</h2>
-            {this.state.soundUrl}
+            {soundUrl}
           </div>
           <div style={{ padding: 20 }}>
             <h2>Headline</h2>
             {this.state.todaysArticle.title}
           </div>
           <h2>replies</h2>
-          {replies.map((text, i) => (
+          {replies.map(({ text }, i) => (
             <div key={text} style={{ textAlign: i % 2 !== 0 && 'right' }}>
               {text}
             </div>
@@ -344,19 +434,9 @@ class App extends Component {
           <h2>Count</h2>
           {this.state.count}
         </div>
-        {this.state.replies[0] && (
-          <marquee
-            style={{
-              width: '100%',
-              position: 'fixed',
-              bottom: 0,
-              color: 'white',
-              fontSize: '3em',
-            }}
-          >
-            {this.state.replies[0]}
-          </marquee>
-        )}
+        <NewsHeadline headline={this.state.replies[0]} />
+
+        <AudioPlayer src={soundUrl} />
       </div>
     );
   }
