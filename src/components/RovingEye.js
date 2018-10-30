@@ -38,15 +38,15 @@ class RovingEye extends Component {
     const that = this;
     const maxTime = 5000;
     const minTime = 1000;
-    // (function loop() {
-    //   var rand = Math.round(Math.random() * (maxTime - minTime)) + minTime;
-    //   setTimeout(() => {
-    //     that.setState({
-    //       scale: Math.random() * 3 + 1,
-    //     });
-    //     loop();
-    //   }, rand);
-    // })();
+    (function loop() {
+      var rand = Math.round(Math.random() * (maxTime - minTime)) + minTime;
+      setTimeout(() => {
+        that.setState({
+          scale: Math.random() * 3 + 2,
+        });
+        loop();
+      }, rand);
+    })();
     // (function loop() {
     //   var rand = Math.round(Math.random() * (3000 - 500)) + 500;
     //   setTimeout(() => {

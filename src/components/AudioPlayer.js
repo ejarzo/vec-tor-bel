@@ -4,15 +4,28 @@ import ReactAudioPlayer from 'react-audio-player';
 class AudioPlayer extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      soundUrls: [],
+    };
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.src && prevProps.src !== this.props.src) {
+      const soundUrls = this.state.soundUrls.slice();
+      soundUrls.push(this.props.src);
+      this.setState({
+        soundUrls,
+      });
+    }
   }
 
   render() {
-    const { src } = this.props;
-    console.log('AUDIO SOURCE', src);
+    const { soundUrls } = this.state;
     return (
       <div>
-        <ReactAudioPlayer src={src} autoPlay />
+        {soundUrls.map(url => (
+          <ReactAudioPlayer src={url} autoPlay />
+        ))}
       </div>
     );
   }

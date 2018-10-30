@@ -82,22 +82,25 @@ export const getYoutubeComments = videoId => {
   });
 };
 
-export const fetchFreesoundResults = query => {
+export const fetchFreesoundResults = (query, { min = 0, max = 100 } = {}) => {
+  console.log('fetching sound for min:', min, 'max:', max);
   const url = 'https://freesound.org/apiv2/search/text/';
   const params = {
     token: FREESOUND_API_KEY,
     query: query,
     fields: 'name,previews',
+    filter: `duration:[${min} TO ${max}]`,
   };
 
   return fetchApi(url, params);
 };
 
-export const getFreesounds = query => {
+export const getFreesounds = (query, minMax) => {
   return new Promise((resolve, reject) => {
-    fetchFreesoundResults(query).then(
+    fetchFreesoundResults(query, minMax).then(
       ({ results }) => {
         if (results.length > 0) {
+          console.log('SOUND RESULTS', results);
           resolve(results);
         } else {
           reject(`No sounds for "${query}"`);
@@ -154,7 +157,8 @@ export const getLanguage = async query => {
     const { results } = await fetchApi(url, params);
     console.log(results);
     const firstResult = results[0];
-    return firstResult.reliable_result ? firstResult.language_code : 'en';
+    return firstResult.language_code;
+    // return firstResult.reliable_result ? firstResult.language_code : 'en';
   } catch (error) {
     return 'en';
   }

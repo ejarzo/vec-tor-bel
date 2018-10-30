@@ -5,7 +5,10 @@ import RovingEye from 'components/RovingEye';
 import NewsHeadline from 'components/NewsHeadline';
 import YoutubePlayer from 'components/YoutubePlayer';
 import AudioPlayer from 'components/AudioPlayer';
-import EmotionManager from 'utils/EmotionManager';
+import ConversationSummaryGraph from 'components/ConversationSummaryGraph';
+import { getColorForEmotion } from 'utils/color';
+import { getRandomIn } from 'utils/data';
+
 import {
   getYoutubeComments,
   getFreesounds,
@@ -14,26 +17,13 @@ import {
   getYoutubeVideos,
   getLanguage,
 } from 'middleware/middleware.js';
-const em = new EmotionManager();
-
-const getRandomIn = array => array[Math.floor(Math.random() * array.length)];
-/* hex to rgb and vice versa */
-function componentToHex(c) {
-  var hex = c.toString(16);
-  return hex.length == 1 ? '0' + hex : hex;
-}
-const rgbToHex = col => {
-  var r = col.r;
-  var g = col.g;
-  var b = col.b;
-
-  return '#' + componentToHex(r) + componentToHex(g) + componentToHex(b);
-};
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      showEye: false,
+      showVideo: true,
       todaysArticle: '',
       replies: [],
       lastCBResponse: { cs: '' },
@@ -50,6 +40,8 @@ class App extends Component {
       filterColor: 'rgb(255,255,255)',
       youtubeBlurAmount1: 0,
       youtubeBlurAmount2: 0,
+
+      responsesPerCycle: 10,
     };
 
     this.begin = this.begin.bind(this);
@@ -80,7 +72,7 @@ class App extends Component {
     if (!articles) return;
 
     // let initArticle = getRandomIn(articles);
-    let initArticle = articles[0];
+    let initArticle = articles[3];
 
     // search top headline on youtube
     const [{ videoId, videoComments }, soundUrl] = await Promise.all([
@@ -110,6 +102,8 @@ class App extends Component {
   }
 
   async speak(input) {
+    window.speechSynthesis.cancel();
+
     if (this.state.voices.length === 0) {
       console.log('no voice yet');
       return;
@@ -118,37 +112,50 @@ class App extends Component {
     // const voice = this.state.voices.find(
     //   voice => voice.lang.slice(0, 2) === languageCode
     // );
+    const { count, responsesPerCycle } = this.state;
 
     const synth = window.speechSynthesis;
     const utterThis = new SpeechSynthesisUtterance(input);
-    // utterThis.pitch = 0.5;
-    // utterThis.rate = 0.5;
+    console.log(utterThis);
+
     utterThis.onend = () => {
       console.log('DONE SPEAKING');
       this.setState({ showCommentOverlay: false });
-      const maxTimeUntilNextResponse = 5 * 1000;
-      const minTimeUntilNextResponse = 1 * 1000;
+      const maxTimeUntilNextResponse =
+        2 * (responsesPerCycle / (count || 1)) * 1000;
+      const minTimeUntilNextResponse =
+        (responsesPerCycle / (count || 1)) * 1000;
 
       setTimeout(
         this.getNextReply,
         Math.random() * maxTimeUntilNextResponse + minTimeUntilNextResponse
       );
     };
-    console.log(utterThis);
-    // utterThis.voice = this.state.currentVoice;
+
+    console.log(count, responsesPerCycle);
+    utterThis.volume = 1;
+    utterThis.pitch = 1;
+    utterThis.rate = count / responsesPerCycle + 1;
+    utterThis.onerror = error => {
+      console.log('speak error');
+      console.log(error);
+    };
+    console.log(this.state.currentVoice);
+    utterThis.voice = this.state.currentVoice;
     synth.speak(utterThis);
   }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevState.voices.length === 0 && this.state.voices.length > 0) {
       this.setState({
-        currentVoice: this.state.voices[67],
+        currentVoice: this.state.voices[0],
       });
     }
   }
 
-  async getSoundUrl(query) {
-    const freeSounds = await getFreesounds(query).catch(error => {
+  async getSoundUrl(query, minMax) {
+    console.log('getsoundurl', minMax);
+    const freeSounds = await getFreesounds(query, minMax).catch(error => {
       console.log('get sounds error:', error);
     });
 
@@ -179,12 +186,19 @@ class App extends Component {
   }
 
   async getNextReply() {
-    const { replies, videoComments, lastCBResponse, count } = this.state;
-    console.log('get next reply', 'prev reply:', replies[replies.length - 1]);
-
+    const {
+      replies,
+      videoComments,
+      lastCBResponse,
+      count,
+      responsesPerCycle,
+    } = this.state;
     const prevReply = replies[replies.length - 1];
     const nextReplies = replies.slice();
 
+    const minSoundLength = (responsesPerCycle * 3) / (count + 1);
+    const maxSoundLength = minSoundLength + minSoundLength * 3;
+    const minMax = { min: minSoundLength, max: maxSoundLength };
     if (
       (replies.length === 2 || replies.length % 20 === 0) &&
       videoComments.length > 0
@@ -200,7 +214,7 @@ class App extends Component {
         soundUrl,
       ] = await Promise.all([
         this.getYoutubeData(nextReply),
-        this.getSoundUrl(nextReply),
+        this.getSoundUrl(nextReply, minMax),
       ]);
 
       this.setState({
@@ -219,18 +233,24 @@ class App extends Component {
       this.speak(text);
     } else {
       // Get cleverbot response
-      const cleverbotResponse = await getCleverbotReply(prevReply.text);
+
+      const cleverbotResponse = await getCleverbotReply(
+        prevReply ? prevReply.text : ''
+      );
       const nextReply = cleverbotResponse.output;
-      nextReplies.push({ text: nextReply, source: 'cleverbot' });
+      const emotion = cleverbotResponse.emotion;
+      const reaction = cleverbotResponse.reaction;
+      console.log('emotion', emotion);
+      nextReplies.push({ text: nextReply, source: 'cleverbot', emotion });
 
       const [{ videoId, videoComments }, soundUrl] = await Promise.all([
         this.getYoutubeData(nextReply),
-        this.getSoundUrl(nextReply),
+        this.getSoundUrl(nextReply, minMax),
       ]);
 
-      const emotion = cleverbotResponse.emotion;
-      const emotionColor = rgbToHex(em.getColorForEmotion(emotion));
-      const emotionSoundUrl = !soundUrl && (await this.getSoundUrl(emotion));
+      const emotionColor = getColorForEmotion(emotion);
+      const emotionSoundUrl =
+        !soundUrl && (await this.getSoundUrl(reaction, minMax));
       this.setState({
         replies: nextReplies,
         lastCBResponse: cleverbotResponse,
@@ -251,12 +271,12 @@ class App extends Component {
 
   async getNews() {
     const { articles } = await getNews().catch(() => ({}));
-    if (articles[0].title !== this.state.todaysArticle.title) {
+    if (articles[3].title !== this.state.todaysArticle.title) {
       console.log('NEW HEADLINE');
-      console.log(articles[0].title);
+      console.log(articles[3].title);
 
       // let initArticle = getRandomIn(articles);
-      let initArticle = articles[0];
+      let initArticle = articles[3];
 
       // search top headline on youtube
       const [{ videoId, videoComments }, soundUrl] = await Promise.all([
@@ -286,6 +306,8 @@ class App extends Component {
 
   render() {
     const {
+      showEye,
+      showVideo,
       videoId,
       videoComments,
       replies,
@@ -295,6 +317,7 @@ class App extends Component {
       showCommentOverlay,
       soundUrl,
     } = this.state;
+
     const n = replies.length;
     const latestReply = replies[n - 1];
 
@@ -304,19 +327,21 @@ class App extends Component {
 
     return (
       <div className="App" style={{ paddingBottom: 100 }}>
-        <div className="VideoContainer">
-          <YoutubePlayer
-            getNextReply={this.getNextReply}
-            count={n}
-            blurAmount1={youtubeBlurAmount1}
-            blurAmount2={youtubeBlurAmount2}
-            videoId={videoId}
-          />
-        </div>
+        {showVideo && (
+          <div className="VideoContainer">
+            <YoutubePlayer
+              getNextReply={this.getNextReply}
+              count={n}
+              blurAmount1={youtubeBlurAmount1}
+              blurAmount2={youtubeBlurAmount2}
+              videoId={videoId}
+            />
+          </div>
+        )}
 
-        {/*<RovingEye />*/}
+        {showEye && <RovingEye />}
 
-        <div
+        {/*<div
           style={{
             mixBlendMode: 'hue',
             transition: 'all 0.5s',
@@ -325,7 +350,7 @@ class App extends Component {
             height: '100vh',
             background: this.state.filterColor,
           }}
-        />
+        />*/}
 
         <div className="SketchContainer">
           {latestReply && (
@@ -350,7 +375,7 @@ class App extends Component {
               {latestReply.text}
             </div>
           )}
-        <div className="controls">
+        <div className="controls" style={{ zIndex: 20 }}>
           <button onClick={this.begin}>BEGIN</button>
           <button onClick={this.getNextReply}>GO</button>
           <button onClick={this.getNews}>CHECK FOR NEWS UPDATES</button>
@@ -396,47 +421,14 @@ class App extends Component {
           </button>
         </div>
 
-        <div
-          style={{
-            display: 'none',
-            padding: 20,
-            position: 'fixed',
-            bottom: 0,
-            maxHeight: 200,
-            overflow: 'scroll',
-            borderTop: '2px solid gray',
-            width: '100%',
-          }}
-        >
-          {videoComments.map(comment => (
-            <div key={comment.id} style={{ padding: 10 }}>
-              <div>{comment.author}</div>
-              <div>{comment.text}</div>
-            </div>
-          ))}
-
-          <div>
-            <h2>SoundUrl</h2>
-            {soundUrl}
-          </div>
-          <div style={{ padding: 20 }}>
-            <h2>Headline</h2>
-            {this.state.todaysArticle.title}
-          </div>
-          <h2>replies</h2>
-          {replies.map(({ text }, i) => (
-            <div key={text} style={{ textAlign: i % 2 !== 0 && 'right' }}>
-              {text}
-            </div>
-          ))}
-        </div>
-        <div style={{ padding: 20 }}>
-          <h2>Count</h2>
-          {this.state.count}
-        </div>
         <NewsHeadline headline={this.state.replies[0]} />
 
         <AudioPlayer src={soundUrl} />
+        {/*latestReply && (
+          <div style={{ position: 'absolute', zIndex: 1 }}>
+            <ConversationSummaryGraph currEmotion={latestReply.emotion} />
+          </div>
+        )*/}
       </div>
     );
   }

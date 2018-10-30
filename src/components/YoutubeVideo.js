@@ -14,6 +14,7 @@ class YoutubeVideo extends Component {
 
   handleReady(e) {
     const player = e.target;
+    // player.setPlaybackRate(2)
     player.mute();
   }
 
@@ -48,8 +49,6 @@ class YoutubeVideo extends Component {
         isVisible: false,
       });
     }
-    console.log('DURATION');
-    console.log(e.target.getDuration());
   }
 
   render() {

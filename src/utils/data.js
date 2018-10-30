@@ -1,3 +1,6 @@
+export const getRandomIn = array =>
+    array[Math.floor(Math.random() * array.length)];
+
 export const emotionGraphNoiseAmounts = {
     flirty: 2,
     silly: 5,
