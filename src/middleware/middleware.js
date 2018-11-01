@@ -155,9 +155,8 @@ export const getLanguage = async query => {
   };
   try {
     const { results } = await fetchApi(url, params);
-    console.log(results);
     const firstResult = results[0];
-    return firstResult.language_code;
+    return firstResult;
     // return firstResult.reliable_result ? firstResult.language_code : 'en';
   } catch (error) {
     return 'en';

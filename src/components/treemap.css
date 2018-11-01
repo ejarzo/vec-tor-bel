@@ -1,3 +1,7 @@
-text {
-	stroke: 'red';
+svg text {
+  font-family: 'Input Mono Narrow';
+  text-anchor: start !important;
+  text-align: start !important;
+  alignment-baseline: text-before-edge !important;
+  opacity: 0.7;
 }

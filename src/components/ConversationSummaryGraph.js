@@ -12,7 +12,8 @@ const emotionCategories = [];
 
 for (const key in emotionLists) {
   emotionCategories.push({
-    title: key,
+    title: '',
+    emotionCategory: key,
     // size: 1,
     color: rgbToHex(getColorForEmotionCategory(key)),
     children: [],
@@ -25,7 +26,7 @@ for (const key in emotionLists) {
 }
 
 const data = {
-  title: 'Emotion',
+  title: '',
   color: '#000',
   children: emotionCategories,
 };
@@ -61,7 +62,7 @@ class AudioPlayer extends Component {
     const dataChildren = this.state.data.children.slice();
     const emotionCategory = getEmotionCategoryForEmotion(emotion);
     const categoryChildren = dataChildren.find(
-      category => category.title === emotionCategory
+      category => category.emotionCategory === emotionCategory
     ).children;
     // debugger;
     const found = categoryChildren.find(x => x.title === emotion);
@@ -84,13 +85,20 @@ class AudioPlayer extends Component {
   }
 
   render() {
-    const { src } = this.props;
+    const { src, enabled } = this.props;
     const { width, height, data } = this.state;
     if (!width) {
       return null;
     }
+
     return (
-      <div>
+      <div
+        style={{
+          transition: 'all 15s',
+          filter: enabled ? 'none' : 'blur(200px)',
+          opacity: enabled ? '1' : '0',
+        }}
+      >
         <Treemap
           {...{
             // animation: true,

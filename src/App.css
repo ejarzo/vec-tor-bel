@@ -7,7 +7,12 @@
 
 .controls {
   position: fixed;
+  opacity: 0;
   top: 0;
+}
+
+.controls:hover {
+  opacity: 1;
 }
 
 .VideoContainer,
