@@ -5,7 +5,7 @@ import NewsHeadline from 'components/NewsHeadline';
 import YoutubePlayer from 'components/YoutubePlayer';
 import AudioPlayer from 'components/AudioPlayer';
 import ConversationSummaryGraph from 'components/ConversationSummaryGraph';
-import { getColorForEmotion } from 'utils/color';
+import { getColorForEmotion, getEmotionCategoryForEmotion } from 'utils/color';
 import { getRandomIn } from 'utils/data';
 
 import {
@@ -64,11 +64,11 @@ class VecTorBel extends Component {
       speechSynthesis.onvoiceschanged = this.getVoices;
     }
 
-    this.channel = new window.BroadcastChannel('ttt');
+    // this.channel = new window.BroadcastChannel('ttt');
   }
 
   componentWillUnmount() {
-    this.channel.close();
+    // this.channel.close();
   }
 
   async begin() {
@@ -85,7 +85,7 @@ class VecTorBel extends Component {
     // search top headline on youtube
     const [{ videoId, videoComments }, soundUrl] = await Promise.all([
       this.getYoutubeData(initArticle.title),
-      this.getSoundUrl(initArticle.title),
+      this.getSoundUrl('news+music', { min: 45, max: 300 }),
     ]);
 
     this.speak(initArticle.title);
@@ -110,46 +110,56 @@ class VecTorBel extends Component {
   }
 
   async speak(input) {
-    window.speechSynthesis.cancel();
-
     if (this.state.voices.length === 0) {
       console.log('no voice yet');
       return;
     }
-    const languageCode = await getLanguage(input);
-    console.log(input, 'is language', languageCode);
-    // const voice = this.state.voices.find(
-    //   voice => voice.lang.slice(0, 2) === languageCode
-    // );
+    const language = await getLanguage(input);
+    const languageCode =
+      language.probability > 10 ? language.language_code : 'en';
+    const voice = this.state.voices.find(
+      voice => voice.lang.slice(0, 2) === languageCode
+    );
+    console.log('Language:', language, voice);
     const { count, responsesPerCycle } = this.state;
 
     const synth = window.speechSynthesis;
     const utterThis = new SpeechSynthesisUtterance(input);
-    console.log(utterThis);
 
     utterThis.onend = () => {
-      console.log('DONE SPEAKING');
-      this.setState({ showCommentOverlay: false });
-      const maxTimeUntilNextResponse =
-        2 * (responsesPerCycle / (count || 1)) * 1000;
-      const minTimeUntilNextResponse =
-        (responsesPerCycle / (count || 1)) * 1000;
+      synth.cancel();
+      this.setState({ showCommentOverlay: false, isSpeaking: false });
+      console.log('============ done speaking ===========');
+
+      console.log('count', count);
+      const cosTime =
+        5 * (Math.cos(((2 * Math.PI) / responsesPerCycle) * count) + 1);
+      const maxTimeUntilNextResponse = 3 * cosTime;
+      // const minTimeUntilNextResponse = cosTime;
+
+      // console.log('max next time', maxTimeUntilNextResponse);
+      // console.log('min next time', minTimeUntilNextResponse);
+      // const timeUntilNextReply =
+      //   Math.random() * (maxTimeUntilNextResponse - minTimeUntilNextResponse) +
+      //   minTimeUntilNextResponse;
+
+      console.log('-- timeUntilNextReply', maxTimeUntilNextResponse);
       if (this.state.runIndefinitely) {
-        setTimeout(
-          this.getNextReply,
-          Math.random() * maxTimeUntilNextResponse + minTimeUntilNextResponse
-        );
+        setTimeout(this.getNextReply, maxTimeUntilNextResponse * 1000);
       }
     };
 
     utterThis.volume = 1;
     utterThis.pitch = 1;
-    utterThis.rate = count / responsesPerCycle + 1;
+    // utterThis.rate = count / responsesPerCycle / 2 + 0.3;
+    utterThis.rate = 1;
     utterThis.onerror = error => {
       console.log('speak error');
       console.log(error);
     };
-    utterThis.voice = this.state.currentVoice;
+    utterThis.voice = voice;
+    this.setState({ isSpeaking: true });
+    console.log(utterThis);
     synth.speak(utterThis);
   }
 
@@ -183,7 +193,7 @@ class VecTorBel extends Component {
     if (!videos) return { videoId, videoComments };
 
     const randomVideo = getRandomIn(videos);
-    console.log('video data...', randomVideo);
+
     videoId = randomVideo.id.videoId;
     videoComments = await getYoutubeComments(videoId).catch(error => {
       // TODO: handle no comments
@@ -207,8 +217,9 @@ class VecTorBel extends Component {
     const minSoundLength = (responsesPerCycle * 3) / (count + 1);
     const maxSoundLength = minSoundLength + minSoundLength * 3;
     const minMax = { min: minSoundLength, max: maxSoundLength };
+
     if (
-      (replies.length === 2 || replies.length % 20 === 0) &&
+      (replies.length === 2 || replies.length % 13 === 0) &&
       videoComments.length > 0
     ) {
       // get comment reply
@@ -222,7 +233,7 @@ class VecTorBel extends Component {
         soundUrl,
       ] = await Promise.all([
         this.getYoutubeData(nextReply),
-        this.getSoundUrl(nextReply, minMax),
+        this.getSoundUrl('comment', minMax),
       ]);
 
       this.setState({
@@ -248,7 +259,7 @@ class VecTorBel extends Component {
       const nextReply = cleverbotResponse.output;
       const emotion = cleverbotResponse.emotion;
       const reaction = cleverbotResponse.reaction;
-      console.log('emotion', emotion);
+
       nextReplies.push({ text: nextReply, source: 'cleverbot', emotion });
 
       const [{ videoId, videoComments }, soundUrl] = await Promise.all([
@@ -258,7 +269,12 @@ class VecTorBel extends Component {
 
       const emotionColor = getColorForEmotion(emotion);
       const emotionSoundUrl =
-        !soundUrl && (await this.getSoundUrl(reaction, minMax));
+        !soundUrl &&
+        (await this.getSoundUrl(
+          getEmotionCategoryForEmotion(`${emotion}+${reaction}`),
+          minMax
+        ));
+
       this.setState({
         replies: nextReplies,
         lastCBResponse: cleverbotResponse,
@@ -325,6 +341,7 @@ class VecTorBel extends Component {
       youtubeBlurAmount2,
       showCommentOverlay,
       soundUrl,
+      isSpeaking,
     } = this.state;
 
     const n = replies.length;
@@ -371,25 +388,33 @@ class VecTorBel extends Component {
           )}
         </div>
 
-        {latestReply &&
-          showCommentOverlay && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                color: 'white',
-                fontSize: '10em',
-              }}
-            >
-              {latestReply.text}
-            </div>
-          )}
+        {latestReply && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              transition: 'all 0.3s',
+              transform: `translate3d(${showCommentOverlay ? 0 : 100}vw, 0, 0)`,
+              mixBlendMode: 'screen',
+              // bottom: 0,
+              // width: '100%',
+              padding: 30,
+              // top: 0,
+              fontFamily: 'Roboto',
+              color: '#222',
+              background: 'white',
+              fontSize: '8em',
+            }}
+          >
+            "{latestReply.text}"
+          </div>
+        )}
         <div className="controls" style={{ zIndex: 20 }}>
           <button onClick={this.begin}>BEGIN</button>
           <button
             onClick={() => {
               // Send a message on "my_bus".
-              this.channel.postMessage('This is a test message.');
+              // this.channel.postMessage('This is a test message.');
             }}
           >
             SEND MESSAGE
@@ -401,6 +426,13 @@ class VecTorBel extends Component {
             }
           >
             Toggle treemap
+          </button>
+          <button
+            onClick={() =>
+              this.setState({ runIndefinitely: !this.state.runIndefinitely })
+            }
+          >
+            Toggle infinite
           </button>
           <button onClick={this.getNews}>CHECK FOR NEWS UPDATES</button>
           <button
@@ -447,7 +479,7 @@ class VecTorBel extends Component {
 
         <NewsHeadline headline={this.state.replies[0]} />
 
-        <AudioPlayer src={soundUrl} />
+        <AudioPlayer src={soundUrl} isSpeaking={isSpeaking} />
         {latestReply && (
           <div style={{ position: 'absolute', zIndex: 1 }}>
             <ConversationSummaryGraph

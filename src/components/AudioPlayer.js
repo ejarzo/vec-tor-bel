@@ -6,6 +6,7 @@ class AudioPlayer extends Component {
     super(props);
     this.state = {
       soundUrls: [],
+      volume: 1,
     };
   }
 
@@ -17,6 +18,16 @@ class AudioPlayer extends Component {
         soundUrls,
       });
     }
+
+    if (this.props.isSpeaking && !prevProps.isSpeaking) {
+      this.setState({ volume: 0.6 });
+      console.log('speaking');
+    }
+
+    if (!this.props.isSpeaking && prevProps.isSpeaking) {
+      this.setState({ volume: 1 });
+      console.log('done speaking');
+    }
   }
 
   render() {
@@ -24,7 +35,7 @@ class AudioPlayer extends Component {
     return (
       <div>
         {soundUrls.map(url => (
-          <ReactAudioPlayer src={url} autoPlay />
+          <ReactAudioPlayer src={url} volume={this.state.volume} autoPlay />
         ))}
       </div>
     );

@@ -23,6 +23,7 @@ class NewsHeadline extends Component {
     return (
       <div
         style={{
+          fontFamily: 'Teko',
           position: 'absolute',
           bottom: 0,
           fontSize: '3em',

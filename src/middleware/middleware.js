@@ -82,7 +82,7 @@ export const getYoutubeComments = videoId => {
   });
 };
 
-export const fetchFreesoundResults = (query, { min = 0, max = 100 } = {}) => {
+export const fetchFreesoundResults = (query, { min = 0, max = 200 } = {}) => {
   console.log('fetching sound for min:', min, 'max:', max);
   const url = 'https://freesound.org/apiv2/search/text/';
   const params = {
@@ -99,10 +99,11 @@ export const getFreesounds = (query, minMax) => {
   return new Promise((resolve, reject) => {
     fetchFreesoundResults(query, minMax).then(
       ({ results }) => {
-        if (results.length > 0) {
+        if (results && results.length > 0) {
           console.log('SOUND RESULTS', results);
           resolve(results);
         } else {
+          // resolve([]);
           reject(`No sounds for "${query}"`);
         }
       },
