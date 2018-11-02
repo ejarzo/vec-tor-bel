@@ -1,4 +1,4 @@
-# Verbolect 2
+# Vec Tor Bel
 The sequel to [Verbolect](http://verbolect.com/) ([source](https://github.com/ejarzo/verbolect))
 
 ## Run
