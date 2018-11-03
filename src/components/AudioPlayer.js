@@ -34,7 +34,7 @@ class AudioPlayer extends Component {
     const { soundUrls } = this.state;
     return (
       <div>
-        {soundUrls.map(url => (
+        {soundUrls.slice(0, 10).map(url => (
           <ReactAudioPlayer src={url} volume={this.state.volume} autoPlay />
         ))}
       </div>

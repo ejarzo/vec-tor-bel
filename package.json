@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "howler": "^2.0.15",
     "react": "^16.5.2",
     "react-audio-player": "^0.11.0",
     "react-dom": "^16.5.2",
+    "react-height": "^3.0.0",
     "react-p5-wrapper": "^0.0.4",
     "react-router": "^4.3.1",
     "react-router-dom": "^4.3.1",

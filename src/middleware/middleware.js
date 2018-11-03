@@ -87,6 +87,7 @@ export const fetchFreesoundResults = (query, { min = 0, max = 200 } = {}) => {
   const url = 'https://freesound.org/apiv2/search/text/';
   const params = {
     token: FREESOUND_API_KEY,
+    page_size: 50,
     query: query,
     fields: 'name,previews',
     filter: `duration:[${min} TO ${max}]`,

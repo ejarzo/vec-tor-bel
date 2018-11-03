@@ -70,10 +70,10 @@ const getColorForEmotionCategory = input => {
   return { r, g, b };
 };
 
-const getColorForEmotion = emotion => {
+const getColorForEmotion = (emotion, rgb) => {
   const emotionCategory = getEmotionCategoryForEmotion(emotion);
   const color = getColorForEmotionCategory(emotionCategory);
-  return rgbToHex(color);
+  return rgb ? color : rgbToHex(color);
 };
 
 export {
