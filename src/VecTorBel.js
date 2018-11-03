@@ -80,11 +80,11 @@ class VecTorBel extends Component {
       speechSynthesis.onvoiceschanged = this.getVoices;
     }
 
-    // this.channel = new window.BroadcastChannel('ttt');
+    this.channel = new window.BroadcastChannel('ttt');
   }
 
   componentWillUnmount() {
-    // this.channel.close();
+    this.channel.close();
   }
 
   async begin() {
@@ -285,6 +285,7 @@ class VecTorBel extends Component {
           videoId: nextVideoId,
         });
       }
+      this.channel.postMessage({ replies: nextReplies, intensity });
     } else {
       // Get cleverbot response
       const cleverbotResponse = await getCleverbotReply(
@@ -328,6 +329,7 @@ class VecTorBel extends Component {
         });
       }
 
+      this.channel.postMessage({ replies: nextReplies, intensity });
       this.speak(nextReply, count + 1);
     }
   }
@@ -428,14 +430,6 @@ class VecTorBel extends Component {
         )}
         <div className="controls" style={{ zIndex: 20 }}>
           <button onClick={this.begin}>BEGIN</button>
-          <button
-            onClick={() => {
-              // Send a message on "my_bus".
-              // this.channel.postMessage('This is a test message.');
-            }}
-          >
-            SEND MESSAGE
-          </button>
           <button onClick={this.getNextReply}>GO</button>
           <button
             onClick={() =>

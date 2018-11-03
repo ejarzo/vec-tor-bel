@@ -42,12 +42,12 @@ class AudioPlayer extends Component {
 
     if (this.props.isSpeaking && !prevProps.isSpeaking) {
       // todo ramp
-      this.volume.set('volume', -12);
+      this.volume.volume.linearRampToValueAtTime(-12, 1);
     }
 
     if (!this.props.isSpeaking && prevProps.isSpeaking) {
       // todo ramp
-      this.volume.set('volume', 0);
+      this.volume.volume.linearRampToValueAtTime(0, 1);
     }
   }
 
