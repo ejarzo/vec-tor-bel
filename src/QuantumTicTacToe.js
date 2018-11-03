@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-
+import QuantumTicTacToeBoard from 'components/QuantumTicTacToeBoard';
 class QuantumTicTacToe extends Component {
   constructor(props) {
     super(props);
@@ -43,6 +43,9 @@ class QuantumTicTacToe extends Component {
           {this.state.replies.map(({ text }) => (
             <div style={{ paddingTop: 5, width: '100%' }}>{text}</div>
           ))}
+        </div>
+        <div>
+          <QuantumTicTacToeBoard />
         </div>
       </div>
     );
