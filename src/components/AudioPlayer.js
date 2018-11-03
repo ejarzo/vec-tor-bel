@@ -1,44 +1,58 @@
 import React, { Component } from 'react';
 import ReactAudioPlayer from 'react-audio-player';
+import { Howl, Howler } from 'howler';
+import Tone from 'tone';
 
 class AudioPlayer extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      soundUrls: [],
-      volume: 1,
-    };
+    this.sounds = [];
+
+    const masterCompressor = new Tone.Compressor({
+      ratio: 16,
+      threshold: -30,
+      release: 0.25,
+      attack: 0.003,
+      knee: 30,
+    });
+
+    this.volume = new Tone.Volume();
+
+    const masterLimiter = new Tone.Limiter(-2);
+    const reverb = new Tone.Freeverb();
+    const masterOutput = new Tone.Gain(0.9).receive('masterOutput');
+
+    masterOutput.chain(
+      reverb,
+      masterCompressor,
+      masterLimiter,
+      this.volume,
+      Tone.Master
+    );
   }
 
   componentDidUpdate(prevProps) {
     if (this.props.src && prevProps.src !== this.props.src) {
-      const soundUrls = this.state.soundUrls.slice();
-      soundUrls.push(this.props.src);
-      this.setState({
-        soundUrls,
+      const player = new Tone.Player(this.props.src, () => {
+        console.log('LOADED', this.props.src);
       });
+      player.autostart = true;
+      player.send('masterOutput');
     }
 
     if (this.props.isSpeaking && !prevProps.isSpeaking) {
-      this.setState({ volume: 0.6 });
-      console.log('speaking');
+      // todo ramp
+      this.volume.set('volume', -12);
     }
 
     if (!this.props.isSpeaking && prevProps.isSpeaking) {
-      this.setState({ volume: 1 });
-      console.log('done speaking');
+      // todo ramp
+      this.volume.set('volume', 0);
     }
   }
 
   render() {
-    const { soundUrls } = this.state;
-    return (
-      <div>
-        {soundUrls.slice(0, 10).map(url => (
-          <ReactAudioPlayer src={url} volume={this.state.volume} autoPlay />
-        ))}
-      </div>
-    );
+    return null;
   }
 }
 

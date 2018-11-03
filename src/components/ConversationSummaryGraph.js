@@ -63,9 +63,12 @@ class AudioPlayer extends Component {
     const emotionCategory = getEmotionCategoryForEmotion(emotion);
     const categoryChildren = dataChildren.find(
       category => category.emotionCategory === emotionCategory
-    ).children;
+    );
+    if (!categoryChildren) {
+      return;
+    }
     // debugger;
-    const found = categoryChildren.find(x => x.title === emotion);
+    const found = categoryChildren.children.find(x => x.title === emotion);
     if (found) {
       found.size++;
 
@@ -73,7 +76,7 @@ class AudioPlayer extends Component {
         data: { ...this.state.data, children: dataChildren },
       });
     } else {
-      categoryChildren.push({
+      categoryChildren.children.push({
         title: emotion,
         size: 1,
         color: rgbToHex(getColorForEmotionCategory(emotionCategory)),

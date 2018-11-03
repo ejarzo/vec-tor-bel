@@ -66,11 +66,10 @@ export default function sketch(p) {
       p.fill(255);
       p.textAlign(p.CENTER);
       p.text(replyData.reply, targetPoint.x || 20, targetPoint.y || 20);
-      replyData.x = width / 2;
-      replyData.y = height / 2;
+      // replyData.x = width / 2;
+      // replyData.y = height / 2;
     }
 
-    p.fill(255);
     const randomModifier = emotionGraphNoiseAmounts[replyData.emotion] * 0.9;
     let xMod = 0;
     let yMod = 0;
@@ -79,17 +78,32 @@ export default function sketch(p) {
       xMod = Math.random() * randomModifier - randomModifier / 2;
       yMod = Math.random() * randomModifier - randomModifier / 2;
     }
-    const yDiff = targetPoint.y - replyData.y;
+
     const xDiff = targetPoint.x - replyData.x;
+    const yDiff = targetPoint.y - replyData.y;
 
-    replyData.x = replyData.x + (xDiff / 50 + xMod);
-    replyData.y = replyData.y + (yDiff / 50 + yMod);
+    const nextX = xDiff / 50 + xMod;
+    const nextY = yDiff / 50 + yMod;
 
-    p.rect(replyData.x, replyData.y, 3, 3);
+    replyData.x += nextX;
+    replyData.y += nextY;
+
+    var a = targetPoint.x - width / 2;
+    var b = targetPoint.y - height / 2;
+    var currA = replyData.x - width / 2;
+    var currB = replyData.y - height / 2;
+
+    var totalDistance = Math.sqrt(a * a + b * b);
+    var currentDistance = Math.sqrt(currA * currA + currB * currB);
+
+    const alpha = currentDistance / 4;
     const c = emotionColor;
-    p.fill(c.r, c.g, c.b, (replyData.y / targetPoint.y) * 244);
-    p.rect(replyData.x + 1, replyData.y + 1, 1, 1);
-    p.rect(replyData.x - 1, replyData.y - 1, 2, 2);
+
+    p.fill(c.r, c.g, c.b, alpha / 2);
+    p.ellipse(replyData.x, replyData.y, 10, 10);
+
+    p.fill(255, 255, 255, alpha);
+    p.ellipse(replyData.x, replyData.y, 3, 3);
 
     lastReply = replyData.reply;
   };
