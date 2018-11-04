@@ -113,7 +113,7 @@ class VecTorBel extends Component {
       videoId,
       soundUrl,
     });
-
+    this.channel.postMessage({ replies: [nextReply], intensity: 2 });
     this.speak(nextReply, 1);
   }
 

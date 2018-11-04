@@ -26,26 +26,34 @@ class QuantumTicTacToe extends Component {
 
   render() {
     return (
-      <div style={{ display: 'grid', color: 'white', padding: 20 }}>
-        <div>TIC TAC TOE</div>
-        <div>intensity: {this.state.intensity}</div>
+      <div
+        style={{
+          display: 'grid',
+          color: 'white',
+          padding: 20,
+          gridTemplateColumns: '300px 1fr',
+        }}
+      >
+        {/*<div>intensity: {this.state.intensity}</div>*/}
 
+        <div>
+          <QuantumTicTacToeBoard replies={this.state.replies} />
+        </div>
         <div
           style={{
             padding: 20,
             border: '2px solid white',
-            height: 200,
+            height: '100%',
             overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'flex-end',
+            position: 'relative',
+            fontFamily: 'Roboto',
           }}
         >
-          {this.state.replies.map(({ text }) => (
-            <div style={{ paddingTop: 5, width: '100%' }}>{text}</div>
-          ))}
-        </div>
-        <div>
-          <QuantumTicTacToeBoard />
+          <div style={{ position: 'absolute', bottom: 20 }}>
+            {this.state.replies.map(({ text }) => (
+              <div style={{ paddingTop: 5, width: '100%' }}>{text}</div>
+            ))}
+          </div>
         </div>
       </div>
     );

@@ -1,3 +1,10 @@
+/*
+  Author: Kyle Raftogianis (https://github.com/knrafto/)
+  Source:
+    - https://github.com/knrafto/quantumt3
+    - https://github.com/knrafto/quantumt3/blob/master/src/board.js
+*/
+
 var Board = (function() {
   'use strict';
 

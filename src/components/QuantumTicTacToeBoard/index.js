@@ -1,40 +1,104 @@
+/*  
+  https://github.com/knrafto/quantumt3
+*/
 import React, { Component } from 'react';
 import Board from './Board';
-const board = new Board();
-let halfMove = null;
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 class QuantumTicTacToeBoard extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      board: board._board,
-    };
+    this.board = new Board();
+    this.halfMove = null;
 
-    // this.addQuantum = this.addQuantum.bind(this);
+    this.generateMove = this.generateMove.bind(this);
   }
 
-  // addQuantum(c, moveNumber) {
-  //   const cells = this.state.cells.slice();
-  //   cells[c].halfMoves.push({ moveNumber });
-  //   // debugger;
-  //   this.setState({ cells });
-  // }
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.replies.length !== this.props.replies.length) {
+      if (this.board.gameOver()) {
+        this.board.clear();
+      }
+      this.generateMove();
+    }
+  }
+
+  stringifyScores() {
+    var scores = this.board.scores();
+    if (!scores) {
+      return;
+    }
+    function stringify(player) {
+      console.log(player);
+      var result,
+        half = '\u00bd',
+        score = scores[player];
+      switch (score) {
+        case 0:
+          return '0';
+        case 1:
+          return half;
+        case 2:
+          return '1';
+        case 3:
+          return '1' + half;
+        case 4:
+          return '2';
+      }
+      return '';
+    }
+
+    return stringify(Board.PLAYERX) + ' \u2014 ' + stringify(Board.PLAYERO);
+  }
+
+  generateMove() {
+    const nextType = this.board.nextType();
+    if (nextType === Board.QUANTUM) {
+      const openCells = [];
+      for (let i = 1; i <= 9; i++) {
+        if (Array.isArray(this.board.get(i))) {
+          openCells.push(i);
+        }
+      }
+      const shuffled = shuffle(openCells);
+      this.makeMove(shuffled[0]);
+      this.makeMove(shuffled[1]);
+    } else if (nextType === Board.COLLAPSE) {
+      const openCells = [];
+      for (let i = 1; i <= 9; i++) {
+        if (this.board.canMove({ type: Board.COLLAPSE, cells: i })) {
+          openCells.push(i);
+        }
+      }
+      const shuffled = shuffle(openCells);
+      this.makeMove(shuffled[0]);
+    } else if (nextType === Board.CLASSICAL) {
+      // view.addClassical(c, moveNumber);
+    }
+  }
 
   makeMove(c) {
-    var nextType = board.nextType(),
-      moveNumber = board.placed() + 1,
+    var nextType = this.board.nextType(),
+      moveNumber = this.board.placed() + 1,
       move = null;
     // debugger;
     if (nextType === Board.QUANTUM) {
-      if (halfMove === null && Array.isArray(board.get(c))) {
+      if (this.halfMove === null && Array.isArray(this.board.get(c))) {
         // view.addQuantum(c, moveNumber);
         // this.addQuantum(c, moveNumber);
-        halfMove = c;
-      } else if (halfMove === c) {
+        this.halfMove = c;
+      } else if (this.halfMove === c) {
         // view.removeQuantum(c, moveNumber);
-        halfMove = null;
+        this.halfMove = null;
       } else {
-        move = { type: Board.QUANTUM, cells: [c, halfMove] };
+        move = { type: Board.QUANTUM, cells: [c, this.halfMove] };
       }
     } else if (nextType === Board.COLLAPSE) {
       move = { type: Board.COLLAPSE, cells: c };
@@ -42,18 +106,12 @@ class QuantumTicTacToeBoard extends Component {
       move = { type: Board.CLASSICAL, cells: c };
     }
 
-    if (!(move && board.move(move))) {
-      this.setState({
-        moveNumber: moveNumber,
-      });
-
+    if (!(move && this.board.move(move))) {
       return;
     }
-    console.log(move);
-    console.log(nextType);
 
     if (nextType === Board.QUANTUM) {
-      halfMove = null;
+      this.halfMove = null;
       // view.addQuantum(c, moveNumber);
       // this.addQuantum(c, moveNumber);
     } else if (nextType === Board.COLLAPSE) {
@@ -63,21 +121,42 @@ class QuantumTicTacToeBoard extends Component {
     }
 
     this.setState({
-      moveNumber: moveNumber,
+      moveNumber,
     });
-    // console.log(board);
+    return true;
   }
 
   render() {
-    // console.log(this.state.board);
     return (
-      <div style={{ padding: 20 }}>
-        <div>board</div>
+      <div style={{ border: '1px solid white', fontFamily: 'Input Mono' }}>
+        {/*        <button
+          onClick={() => {
+            this.board.clear();
+            this.setState({
+              moveNumber: 0,
+            });
+          }}
+        >
+          clear
+        </button>
+        <button
+          onClick={() => {
+            this.generateMove();
+          }}
+        >
+          go
+        </button>*/}
         <div style={{ width: 300, display: 'flex', flexWrap: 'wrap' }}>
-          {board._board.map((cellOrCells, i) => {
-            const isHighlighted = board.canMove({
+          {this.board._board.map((cellOrCells, i) => {
+            const isHighlighted = this.board.canMove({
               type: Board.COLLAPSE,
               cells: i + 1,
+            });
+            let isWinning = false;
+            this.board.tictactoes().forEach(tictactoe => {
+              if (tictactoe.cells.indexOf(i + 1) > -1) {
+                isWinning = true;
+              }
             });
             return (
               <div
@@ -87,25 +166,31 @@ class QuantumTicTacToeBoard extends Component {
                   height: 100,
                   border: '1px solid white',
                   background: isHighlighted ? '#444' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: isWinning ? '#F00' : 'white',
                 }}
               >
                 {Array.isArray(cellOrCells) ? (
-                  cellOrCells.map(cell => (
-                    <span>
-                      {cell % 2 === 0 ? 'X' : 'O'}
-                      {cell}
+                  cellOrCells.map((cell, i) => (
+                    <span style={{ paddingLeft: i > 0 ? 5 : 0 }}>
+                      {cell % 2 === 0 ? 'O' : 'X'}
+                      <sub>{Math.ceil(cell / 2)}</sub>
                     </span>
                   ))
                 ) : (
                   <span style={{ fontSize: '3em' }}>
-                    {cellOrCells % 2 === 0 ? 'X' : 'O'} {cellOrCells}
+                    {cellOrCells % 2 === 0 ? 'O' : 'X'}
+                    <sub>{Math.ceil(cellOrCells / 2)}</sub>
                   </span>
                 )}
               </div>
             );
           })}
         </div>
-        {board.gameOver() && <div>GAME OVER</div>}
+        {this.board.gameOver() && <div>GAME OVER</div>}
+        <div>{this.stringifyScores()}</div>
       </div>
     );
   }

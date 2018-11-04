@@ -29,7 +29,7 @@ class NewsHeadline extends Component {
           fontSize: '3em',
           whiteSpace: 'nowrap',
           transition: 'all 20s linear',
-          transform: `translateX(${isAnimating ? '-100vw' : '100vw'})`,
+          transform: `translateX(${isAnimating ? '-100%' : '100vw'})`,
           color: 'white',
         }}
       >
