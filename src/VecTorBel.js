@@ -143,7 +143,7 @@ class VecTorBel extends Component {
     } else {
       const language = await getLanguage(text);
       const languageCode =
-        language.probability > 10 ? language.language_code : 'en';
+        language.probability > 5 ? language.language_code : 'en';
 
       voice = voices.find(voice => voice.lang.slice(0, 2) === languageCode);
       console.log('Language:', language, voice);

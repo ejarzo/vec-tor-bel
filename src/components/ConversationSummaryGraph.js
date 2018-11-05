@@ -100,6 +100,7 @@ class AudioPlayer extends Component {
           transition: 'all 15s',
           filter: enabled ? 'none' : 'blur(200px)',
           opacity: enabled ? '1' : '0',
+          mixBlendMode: 'overlay',
         }}
       >
         <Treemap
@@ -110,8 +111,8 @@ class AudioPlayer extends Component {
             data,
             mode: 'squarify',
             renderMode: 'SVG',
-            height,
-            width,
+            height: 650,
+            width: 650,
             margin: 0,
             getSize: d => d.size,
             getColor: d => d.color,

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import QuantumTicTacToeBoard from 'components/QuantumTicTacToeBoard';
+import ConversationSummaryGraph from 'components/ConversationSummaryGraph';
 class QuantumTicTacToe extends Component {
   constructor(props) {
     super(props);
@@ -25,6 +26,8 @@ class QuantumTicTacToe extends Component {
   }
 
   render() {
+    const n = this.state.replies.length;
+    const latestReply = this.state.replies[n - 1];
     return (
       <div
         style={{
@@ -54,6 +57,14 @@ class QuantumTicTacToe extends Component {
               <div style={{ paddingTop: 5, width: '100%' }}>{text}</div>
             ))}
           </div>
+        </div>
+        <div>
+          {latestReply && (
+            <ConversationSummaryGraph
+              enabled
+              currEmotion={latestReply.emotion}
+            />
+          )}
         </div>
       </div>
     );

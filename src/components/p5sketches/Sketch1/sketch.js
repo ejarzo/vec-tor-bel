@@ -64,8 +64,8 @@ export default function sketch(p) {
   p.draw = () => {
     if (replyData.reply !== lastReply) {
       p.fill(255);
-      p.textAlign(p.CENTER);
-      p.text(replyData.reply, targetPoint.x || 20, targetPoint.y || 20);
+      // p.textAlign(p.CENTER);
+      // p.text(replyData.reply, targetPoint.x || 20, targetPoint.y || 20);
       // replyData.x = width / 2;
       // replyData.y = height / 2;
     }
