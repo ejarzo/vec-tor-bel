@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 import YoutubeVideo from './YoutubeVideo';
-
+import { scaleIntensity } from 'App';
 const options = {
   height: '100%',
   width: '100%',
@@ -31,22 +31,14 @@ class YoutubePlayer extends Component {
       translateY: 0,
       topVideoId: '',
       bottomVideoId: '',
+      volume: 0,
     };
   }
 
   componentDidMount() {
-    // this.setState({ width: viewWidth, height: viewHeight });
-    // const that = this;
-    // (function loop() {
-    //   var rand = Math.round(Math.random() * (3000 - 500)) + 500;
-    //   setTimeout(() => {
-    //     that.setState({
-    //       translateX: Math.random() * 20 - 10,
-    //       translateY: Math.random() * 20 - 10,
-    //     });
-    //     loop();
-    //   }, rand);
-    // })();
+    this.setState({
+      volume: 50,
+    });
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -58,17 +50,31 @@ class YoutubePlayer extends Component {
         this.setState({
           topVideoId: this.props.videoId,
         });
+      } else if (this.props.count % 3 === 0) {
+        this.setState({
+          topVideoId2: this.props.videoId,
+        });
+      } else if (this.props.count % 4 === 0) {
+        this.setState({
+          topVideoId3: this.props.videoId,
+        });
       } else {
         this.setState({
           bottomVideoId: this.props.videoId,
         });
       }
     }
+
+    // if (prevProps.volume !== this.props.volume) {
+    //   this.setState({
+    //     volume: this.props.volume
+    //   });
+    // }
   }
 
   render() {
-    const { blurAmount1, blurAmount2 } = this.props;
-    const { topVideoId, bottomVideoId } = this.state;
+    const { blurAmount1, blurAmount2, volume } = this.props;
+    const { topVideoId, topVideoId2, topVideoId3, bottomVideoId } = this.state;
 
     return (
       <div>
@@ -76,12 +82,28 @@ class YoutubePlayer extends Component {
           videoId={bottomVideoId}
           blurAmount={blurAmount1}
           options={options}
+          volume={this.state.volume}
         />
         <YoutubeVideo
           isTop
           videoId={topVideoId}
           blurAmount={blurAmount2}
           options={options}
+          volume={volume}
+        />
+        <YoutubeVideo
+          isTop
+          videoId={topVideoId2}
+          blurAmount={blurAmount2}
+          options={options}
+          volume={this.state.volume}
+        />
+        <YoutubeVideo
+          isTop
+          videoId={topVideoId3}
+          blurAmount={blurAmount2}
+          options={options}
+          volume={this.state.volume}
         />
       </div>
     );

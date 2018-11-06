@@ -94,6 +94,9 @@ class AudioPlayer extends Component {
       return null;
     }
 
+    if (!enabled) {
+      return null;
+    }
     return (
       <div
         style={{

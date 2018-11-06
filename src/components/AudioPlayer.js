@@ -1,9 +1,7 @@
-import React, { Component } from 'react';
-import ReactAudioPlayer from 'react-audio-player';
-import { Howl, Howler } from 'howler';
+import React from 'react';
 import Tone from 'tone';
 
-class AudioPlayer extends Component {
+class AudioPlayer extends React.Component {
   constructor(props) {
     super(props);
     this.sounds = [];
@@ -29,25 +27,31 @@ class AudioPlayer extends Component {
       this.volume,
       Tone.Master
     );
+
+    this.players = [...Array(10)].map((_, i) => {
+      const player = new Tone.Player();
+      player.autostart = true;
+      player.send('masterOutput');
+      return player;
+    });
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.src && prevProps.src !== this.props.src) {
-      const player = new Tone.Player(this.props.src, () => {
-        console.log('LOADED', this.props.src);
+    const { src, count } = this.props;
+    if (this.props.src && prevProps.src !== src) {
+      this.players[count % 10].load(src, () => {
+        console.log('Player ', 0, 'loaded ', src);
       });
-      player.autostart = true;
-      player.send('masterOutput');
     }
 
     if (this.props.isSpeaking && !prevProps.isSpeaking) {
       // todo ramp
-      this.volume.volume.linearRampToValueAtTime(-12, 1);
+      this.volume.volume.rampTo(-12, 1);
     }
 
     if (!this.props.isSpeaking && prevProps.isSpeaking) {
       // todo ramp
-      this.volume.volume.linearRampToValueAtTime(0, 1);
+      this.volume.volume.rampTo(0, 1);
     }
   }
 

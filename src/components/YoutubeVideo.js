@@ -13,22 +13,16 @@ class YoutubeVideo extends Component {
   }
 
   handleReady(e) {
-    const player = e.target;
+    // const player = e.target;
     // player.setPlaybackRate(2)
-    player.mute();
+    this.player = e.target;
+    this.player.setVolume(0);
   }
 
   componentDidUpdate(prevProps, prevState) {
-    // if (prevProps.videoId !== this.props.videoId) {
-    //   this.setState({
-    //     isVisible: false,
-    //   });
-    //   setTimeout(() => {
-    //     this.setState({
-    //       videoId: this.props.videoId,
-    //     });
-    //   }, 10000);
-    // }
+    if (prevProps.volume !== this.props.volume) {
+      this.player && this.player.setVolume(this.props.volume);
+    }
   }
 
   handleStateChange(e) {

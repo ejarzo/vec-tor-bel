@@ -1,8 +1,5 @@
-import { emotionGraphNoiseAmounts } from 'utils/data';
+import { emotionGraphNoiseAmounts, convertRange } from 'utils/data';
 import { getColorForEmotion } from 'utils/color';
-
-const convertRange = (value, r1, r2) =>
-  ((value - r1[0]) * (r2[1] - r2[0])) / (r1[1] - r1[0]) + r2[0];
 
 export default function sketch(p) {
   const width = window.innerWidth;
@@ -47,12 +44,12 @@ export default function sketch(p) {
       interaction_count: interactionCount,
     } = newData;
 
-    const r = convertRange(emotionDegree, [0, 80], [0, height / 2]) || 0;
-    const theta = convertRange(reactionDegree, [0, 80], [0, 360]) || 0;
+    const r = convertRange(emotionDegree, [0, 50], [0, width / 2]) || 0;
+    const theta = convertRange(reactionDegree, [0, 50], [0, 360]) || 0;
     emotionColor = getColorForEmotion(emotion, true);
     targetPoint = {
       x: r * Math.cos(theta) + width / 2,
-      y: r * Math.sin(theta) + height / 2,
+      y: ((r * Math.sin(theta) + height / 2) * height) / width,
     };
 
     count = interactionCount;
@@ -62,13 +59,13 @@ export default function sketch(p) {
 
   // let percentage = 0;
   p.draw = () => {
-    if (replyData.reply !== lastReply) {
-      p.fill(255);
-      // p.textAlign(p.CENTER);
-      // p.text(replyData.reply, targetPoint.x || 20, targetPoint.y || 20);
-      // replyData.x = width / 2;
-      // replyData.y = height / 2;
-    }
+    // if (replyData.reply !== lastReply) {
+    //   p.fill(255);
+    //   // p.textAlign(p.CENTER);
+    //   // p.text(replyData.reply, targetPoint.x || 20, targetPoint.y || 20);
+    //   // replyData.x = width / 2;
+    //   // replyData.y = height / 2;
+    // }
 
     const randomModifier = emotionGraphNoiseAmounts[replyData.emotion] * 0.9;
     let xMod = 0;
@@ -88,13 +85,13 @@ export default function sketch(p) {
     replyData.x += nextX;
     replyData.y += nextY;
 
-    var a = targetPoint.x - width / 2;
-    var b = targetPoint.y - height / 2;
-    var currA = replyData.x - width / 2;
-    var currB = replyData.y - height / 2;
+    // var a = targetPoint.x - width / 2;
+    // var b = targetPoint.y - height / 2;
+    const currA = replyData.x - width / 2;
+    const currB = replyData.y - height / 2;
 
-    var totalDistance = Math.sqrt(a * a + b * b);
-    var currentDistance = Math.sqrt(currA * currA + currB * currB);
+    // var totalDistance = Math.sqrt(a * a + b * b);
+    const currentDistance = Math.sqrt(currA * currA + currB * currB);
 
     const alpha = currentDistance / 4;
     const c = emotionColor;
@@ -104,6 +101,8 @@ export default function sketch(p) {
 
     p.fill(255, 255, 255, alpha);
     p.ellipse(replyData.x, replyData.y, 3, 3);
+    // p.ellipse(replyData.x + nextX, replyData.y + nextY, 10, 10);
+    // p.ellipse(replyData.x - nextX, replyData.y - nextY, 3, 3);
 
     lastReply = replyData.reply;
   };

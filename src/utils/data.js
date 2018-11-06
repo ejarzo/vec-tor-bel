@@ -1,5 +1,13 @@
-export const getRandomIn = array =>
-  array[Math.floor(Math.random() * array.length)];
+export const getRandomIn = array => {
+  const randomIndex = Math.floor(Math.random() * array.length);
+  console.log('results random index', randomIndex);
+  return array[randomIndex];
+};
+
+export const convertRange = (value, r1, r2) =>
+  value > r1[1]
+    ? r2[1]
+    : ((value - r1[0]) * (r2[1] - r2[0])) / (r1[1] - r1[0]) + r2[0];
 
 export const emotionGraphNoiseAmounts = {
   flirty: 2,

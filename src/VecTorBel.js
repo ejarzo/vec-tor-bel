@@ -4,10 +4,11 @@ import RovingEye from 'components/RovingEye';
 import NewsHeadline from 'components/NewsHeadline';
 import YoutubePlayer from 'components/YoutubePlayer';
 import AudioPlayer from 'components/AudioPlayer';
+import LatestReplyText from 'components/LatestReplyText';
 import ConversationSummaryGraph from 'components/ConversationSummaryGraph';
 import { getColorForEmotion, getEmotionCategoryForEmotion } from 'utils/color';
 import { getRandomIn } from 'utils/data';
-import { Howl, Howler } from 'howler';
+import { Howl } from 'howler';
 import { ReactHeight } from 'react-height';
 
 import {
@@ -15,7 +16,7 @@ import {
   getFreesounds,
   getCleverbotReply,
   getNews,
-  getYoutubeVideos,
+  getYoutubeVideoId,
   getLanguage,
 } from 'middleware/middleware.js';
 
@@ -23,7 +24,7 @@ const scale = (num, in_min, in_max, out_min, out_max) => {
   return ((num - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min;
 };
 
-const scaleIntensity = (num, outMin, outMax) =>
+export const scaleIntensity = (num, outMin, outMax) =>
   scale(num, 0, 2, outMin, outMax);
 
 class VecTorBel extends Component {
@@ -36,7 +37,6 @@ class VecTorBel extends Component {
       showVideo: true,
       showTreemap: false,
 
-      todaysArticle: '',
       replies: [],
       lastCBResponse: { cs: '' },
       count: 0,
@@ -63,7 +63,6 @@ class VecTorBel extends Component {
     this.speak = this.speak.bind(this);
 
     this.getVoices = this.getVoices.bind(this);
-    this.getYoutubeData = this.getYoutubeData.bind(this);
     this.getSoundUrl = this.getSoundUrl.bind(this);
     this.getNextReply = this.getNextReply.bind(this);
   }
@@ -87,34 +86,12 @@ class VecTorBel extends Component {
     this.channel.close();
   }
 
-  async begin() {
-    const { articles } = await getNews().catch(error => {
-      console.log(error);
-      return {};
-      // TODO: handle get news error
-    });
-    if (!articles) return;
-
-    // let initArticle = getRandomIn(articles);
-    let initArticle = articles[0];
-
-    // search top headline on youtube
-    const [videoId, soundUrl] = await Promise.all([
-      this.getYoutubeData(initArticle.title),
-      this.getSoundUrl('news+breaking news', { min: 45, max: 300 }),
-    ]);
-
-    const nextReply = { text: initArticle.title, source: 'news' };
-
-    // initialize with top headline
-    this.setState({
-      todaysArticle: initArticle,
-      replies: [nextReply],
-      videoId,
-      soundUrl,
-    });
-    this.channel.postMessage({ replies: [nextReply], intensity: 2 });
-    this.speak(nextReply, 1);
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.voices.length === 0 && this.state.voices.length > 0) {
+      this.setState({
+        currentVoice: this.state.voices[0],
+      });
+    }
   }
 
   getVoices() {
@@ -127,6 +104,39 @@ class VecTorBel extends Component {
     return voices;
   }
 
+  async getNewsReply() {
+    const { articles } = await getNews().catch(error => {
+      console.log(error);
+      return {};
+      // TODO: handle get news error
+    });
+    if (!articles) return;
+
+    let initArticle = articles[0];
+
+    return { text: initArticle.title, source: 'news' };
+  }
+
+  async begin() {
+    const nextReply = await this.getNewsReply();
+
+    // search top headline on youtube
+    const [videoId, soundUrl] = await Promise.all([
+      getYoutubeVideoId(nextReply.text),
+      this.getSoundUrl('news+breaking news', { min: 45, max: 300 }),
+    ]);
+
+    // initialize with top headline
+    this.setState({
+      replies: [nextReply],
+      videoId,
+      soundUrl,
+    });
+
+    this.channel.postMessage({ replies: [nextReply], intensity: 2 });
+    this.speak(nextReply, 1);
+  }
+
   async speak({ text, source }, count) {
     console.log('SPEAK CALLED', this.state);
     const { voices, responsesPerCycle } = this.state;
@@ -136,17 +146,15 @@ class VecTorBel extends Component {
     }
 
     let voice = voices[0];
-
     if (source === 'news') {
       // use google voice
-      voice = voices[48];
+      voice = voices.find(({ voiceURI }) => voiceURI === 'Google US English');
     } else {
       const language = await getLanguage(text);
       const languageCode =
         language.probability > 5 ? language.language_code : 'en';
 
       voice = voices.find(voice => voice.lang.slice(0, 2) === languageCode);
-      console.log('Language:', language, voice);
     }
 
     const synth = window.speechSynthesis;
@@ -157,7 +165,7 @@ class VecTorBel extends Component {
     const intensity = this.getIntensityFromCount(count);
     console.log('speaking intensity', intensity);
 
-    // const onEnd =
+    console.log(voices);
 
     utterance.onend = () => {
       // synth.cancel();
@@ -190,14 +198,6 @@ class VecTorBel extends Component {
     synth.speak(utterance);
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.voices.length === 0 && this.state.voices.length > 0) {
-      this.setState({
-        currentVoice: this.state.voices[0],
-      });
-    }
-  }
-
   async getSoundUrl(query, minMax) {
     console.log('getsoundurl', minMax);
     const freeSounds = await getFreesounds(query, minMax).catch(error => {
@@ -206,21 +206,6 @@ class VecTorBel extends Component {
 
     if (!freeSounds) return '';
     return getRandomIn(freeSounds).previews['preview-hq-mp3'];
-  }
-
-  async getYoutubeData(query) {
-    const videos = await getYoutubeVideos(query).catch(error => {
-      console.log('error getting videos');
-      console.log(error);
-      return [];
-    });
-
-    if (videos.length > 0) {
-      const randomVideo = getRandomIn(videos);
-      return randomVideo.id.videoId;
-    }
-
-    return '';
   }
 
   async getNextReply() {
@@ -259,7 +244,7 @@ class VecTorBel extends Component {
       nextReplies.push(nextReply);
 
       const [nextVideoId, alertSoundUrl] = await Promise.all([
-        this.getYoutubeData(nextReply.text),
+        getYoutubeVideoId(nextReply.text),
         this.getSoundUrl('computer alert', {
           min: 0,
           max: 2,
@@ -297,7 +282,7 @@ class VecTorBel extends Component {
       nextReplies.push(nextReply);
 
       const [nextVideoId, soundUrl] = await Promise.all([
-        this.getYoutubeData(nextReply.text),
+        getYoutubeVideoId(nextReply.text),
         this.getSoundUrl(nextReply.text, minMax),
       ]);
 
@@ -348,6 +333,7 @@ class VecTorBel extends Component {
       showCommentOverlay,
       soundUrl,
       isSpeaking,
+      count,
     } = this.state;
 
     const n = replies.length;
@@ -367,12 +353,21 @@ class VecTorBel extends Component {
               blurAmount1={youtubeBlurAmount1}
               blurAmount2={youtubeBlurAmount2}
               videoId={videoId}
+              volume={
+                scaleIntensity(this.getIntensityFromCount(count) - 100, 0) + 100
+              }
             />
           </div>
         )}
 
         {showEye && <RovingEye />}
 
+        {latestReply && (
+          <LatestReplyText
+            latestReply={latestReply}
+            lastCBResponse={lastCBResponse}
+          />
+        )}
         {/*<div
           style={{
             mixBlendMode: 'hue',
@@ -498,7 +493,7 @@ class VecTorBel extends Component {
 
         <NewsHeadline headline={this.state.replies[0]} />
 
-        <AudioPlayer src={soundUrl} isSpeaking={isSpeaking} />
+        <AudioPlayer src={soundUrl} isSpeaking={isSpeaking} count={count} />
         {latestReply && (
           <div style={{ position: 'absolute', zIndex: 1 }}>
             <ConversationSummaryGraph

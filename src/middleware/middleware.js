@@ -1,3 +1,5 @@
+import { getRandomIn } from 'utils/data';
+
 const YOUTUBE_API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
 const FREESOUND_API_KEY = process.env.REACT_APP_FREESOUND_API_KEY;
 const CLEVERBOT_API_KEY = process.env.REACT_APP_CLEVERBOT_API_KEY;
@@ -45,6 +47,21 @@ export const getYoutubeVideos = query => {
   });
 };
 
+export const getYoutubeVideoId = async query => {
+  const videos = await getYoutubeVideos(query).catch(error => {
+    console.log('error getting videos');
+    console.log(error);
+    return [];
+  });
+
+  if (videos.length > 0) {
+    const randomVideo = getRandomIn(videos);
+    return randomVideo.id.videoId;
+  }
+
+  return '';
+};
+
 const fetchYoutubeComments = videoId => {
   const url = 'https://www.googleapis.com/youtube/v3/commentThreads/';
   const params = {
@@ -83,13 +100,14 @@ export const getYoutubeComments = videoId => {
 };
 
 export const fetchFreesoundResults = (query, { min = 0, max = 200 } = {}) => {
-  console.log('fetching sound for min:', min, 'max:', max);
+  console.log('FETCHING SOUND', query);
+  console.log('min:', min, 'max:', max);
   const url = 'https://freesound.org/apiv2/search/text/';
   const params = {
     token: FREESOUND_API_KEY,
     page_size: 50,
     query: query,
-    fields: 'name,previews',
+    fields: 'name,previews,username',
     filter: `duration:[${min} TO ${max}]`,
   };
 
@@ -102,7 +120,12 @@ export const getFreesounds = (query, minMax) => {
       ({ results }) => {
         if (results && results.length > 0) {
           console.log('SOUND RESULTS', results);
-          resolve(results);
+          resolve(
+            results.filter(
+              ({ username }) =>
+                username !== 'JohnLaVine333' && username !== 'SoundMaster391'
+            )
+          );
         } else {
           // resolve([]);
           reject(`No sounds for "${query}"`);
