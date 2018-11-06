@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import VecTorBel from './VecTorBel';
-import QuantumTicTacToe from './QuantumTicTacToe';
+import SecondView from './SecondView';
 
 import { BrowserRouter, Switch, Route } from 'react-router-dom';
 
@@ -11,7 +11,7 @@ class App extends Component {
       <BrowserRouter>
         <Switch>
           <Route exact path="/" component={VecTorBel} />
-          <Route path="/tic-tac-toe" component={QuantumTicTacToe} />
+          <Route path="/tic-tac-toe" component={SecondView} />
         </Switch>
       </BrowserRouter>
     );

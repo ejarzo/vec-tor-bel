@@ -17,17 +17,32 @@ class QuantumTicTacToeBoard extends Component {
     super(props);
     this.board = new Board();
     this.halfMove = null;
-
+    this.state = {
+      totalScoreX: 0,
+      totalScoreO: 0,
+    };
     this.generateMove = this.generateMove.bind(this);
   }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.replies.length !== this.props.replies.length) {
       if (this.board.gameOver()) {
+        this.updateScores();
         this.board.clear();
       }
       this.generateMove();
     }
+  }
+
+  updateScores() {
+    const scores = this.board.scores();
+    console.log(scores);
+    const { totalScoreX, totalScoreO } = this.state;
+    this.setState({
+      totalScoreX: totalScoreX + scores.X / 2,
+      totalScoreO: totalScoreO + scores.O / 2,
+    });
+    console.log(scores);
   }
 
   stringifyScores() {
@@ -81,6 +96,14 @@ class QuantumTicTacToeBoard extends Component {
       this.makeMove(shuffled[0]);
     } else if (nextType === Board.CLASSICAL) {
       // view.addClassical(c, moveNumber);
+      const openCells = [];
+      for (let i = 1; i <= 9; i++) {
+        if (Array.isArray(this.board.get(i))) {
+          openCells.push(i);
+        }
+      }
+      const shuffled = shuffle(openCells);
+      this.makeMove(shuffled[0]);
     }
   }
 
@@ -129,7 +152,7 @@ class QuantumTicTacToeBoard extends Component {
   render() {
     return (
       <div style={{ border: '1px solid white', fontFamily: 'Input Mono' }}>
-        {/*        <button
+        <button
           onClick={() => {
             this.board.clear();
             this.setState({
@@ -145,7 +168,14 @@ class QuantumTicTacToeBoard extends Component {
           }}
         >
           go
-        </button>*/}
+        </button>
+        <button
+          onClick={() => {
+            this.updateScores();
+          }}
+        >
+          updateScores
+        </button>
         <div style={{ width: 300, display: 'flex', flexWrap: 'wrap' }}>
           {this.board._board.map((cellOrCells, i) => {
             const isHighlighted = this.board.canMove({
@@ -169,28 +199,43 @@ class QuantumTicTacToeBoard extends Component {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: isWinning ? '#F00' : 'white',
+                  // color: isWinning ? '#F00' : 'white',
                 }}
               >
-                {Array.isArray(cellOrCells) ? (
-                  cellOrCells.map((cell, i) => (
-                    <span style={{ paddingLeft: i > 0 ? 5 : 0 }}>
-                      {cell % 2 === 0 ? 'O' : 'X'}
-                      <sub>{Math.ceil(cell / 2)}</sub>
+                <span className={isWinning ? 'blink' : ''}>
+                  {Array.isArray(cellOrCells) ? (
+                    cellOrCells.map((cell, i) => (
+                      <span style={{ paddingLeft: i > 0 ? 5 : 0 }}>
+                        {cell % 2 === 0 ? 'O' : 'X'}
+                        <sub style={{ opacity: 0.5 }}>
+                          {Math.ceil(cell / 2)}
+                        </sub>
+                      </span>
+                    ))
+                  ) : (
+                    <span style={{ fontSize: '3em' }}>
+                      {cellOrCells % 2 === 0 ? 'O' : 'X'}
+                      <sub style={{ opacity: 0.5 }}>
+                        {Math.ceil(cellOrCells / 2)}
+                      </sub>
                     </span>
-                  ))
-                ) : (
-                  <span style={{ fontSize: '3em' }}>
-                    {cellOrCells % 2 === 0 ? 'O' : 'X'}
-                    <sub>{Math.ceil(cellOrCells / 2)}</sub>
-                  </span>
-                )}
+                  )}
+                </span>
               </div>
             );
           })}
         </div>
-        {this.board.gameOver() && <div>GAME OVER</div>}
-        <div>{this.stringifyScores()}</div>
+        <div style={{ padding: 2 }}>
+          {this.board.gameOver() && (
+            <div>
+              <div>GAME OVER</div>
+              <div>Score: {this.stringifyScores()}</div>
+            </div>
+          )}
+          <div>Total Scores</div>
+          <div>X: {this.state.totalScoreX}</div>
+          <div>O: {this.state.totalScoreO}</div>
+        </div>
       </div>
     );
   }

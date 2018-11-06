@@ -31,3 +31,19 @@ button {
   background: transparent;
   cursor: pointer;
 }
+
+.blink {
+  animation: 2s linear infinite blink;
+}
+
+@keyframes blink {
+  0% {
+    visibility: visible;
+  }
+  50% {
+    visibility: hidden;
+  }
+  100% {
+    visibility: hidden;
+  }
+}
