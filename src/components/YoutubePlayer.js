@@ -1,12 +1,11 @@
 import React, { Component } from 'react';
-
 import YoutubeVideo from './YoutubeVideo';
-import { scaleIntensity } from 'App';
+
+// https://developers.google.com/youtube/player_parameters
 const options = {
   height: '100%',
   width: '100%',
   playerVars: {
-    // https://developers.google.com/youtube/player_parameters
     autoplay: 1,
     controls: 0, // Show pause/play buttons in player
     showinfo: 0, // Hide the video title
@@ -37,15 +36,13 @@ class YoutubePlayer extends Component {
 
   componentDidMount() {
     this.setState({
-      volume: 50,
+      volume: 0,
     });
   }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.videoId !== this.props.videoId) {
-      console.log('UPDATE', prevProps.videoId, this.props.videoId);
-      // setTimeout(this.props.getNextReply, 5000);
-
+      // console.log('UPDATE', prevProps.videoId, this.props.videoId);
       if (this.props.count % 2 === 0) {
         this.setState({
           topVideoId: this.props.videoId,
@@ -64,12 +61,6 @@ class YoutubePlayer extends Component {
         });
       }
     }
-
-    // if (prevProps.volume !== this.props.volume) {
-    //   this.setState({
-    //     volume: this.props.volume
-    //   });
-    // }
   }
 
   render() {
@@ -82,28 +73,28 @@ class YoutubePlayer extends Component {
           videoId={bottomVideoId}
           blurAmount={blurAmount1}
           options={options}
-          volume={this.state.volume}
+          volume={volume * 0.8}
         />
         <YoutubeVideo
           isTop
           videoId={topVideoId}
           blurAmount={blurAmount2}
           options={options}
-          volume={volume}
+          volume={volume * 0.8}
         />
         <YoutubeVideo
           isTop
           videoId={topVideoId2}
           blurAmount={blurAmount2}
           options={options}
-          volume={this.state.volume}
+          volume={volume * 0.8}
         />
         <YoutubeVideo
           isTop
           videoId={topVideoId3}
           blurAmount={blurAmount2}
           options={options}
-          volume={this.state.volume}
+          volume={volume * 0.8}
         />
       </div>
     );

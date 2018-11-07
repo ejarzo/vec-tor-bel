@@ -114,6 +114,8 @@ export const fetchFreesoundResults = (query, { min = 0, max = 200 } = {}) => {
   return fetchApi(url, params);
 };
 
+const excludeList = ['JohnLaVine333', 'SoundMaster391', 'Timbre'];
+
 export const getFreesounds = (query, minMax) => {
   return new Promise((resolve, reject) => {
     fetchFreesoundResults(query, minMax).then(
@@ -122,8 +124,7 @@ export const getFreesounds = (query, minMax) => {
           console.log('SOUND RESULTS', results);
           resolve(
             results.filter(
-              ({ username }) =>
-                username !== 'JohnLaVine333' && username !== 'SoundMaster391'
+              ({ username }) => excludeList.indexOf(username) === -1
             )
           );
         } else {
@@ -136,6 +137,16 @@ export const getFreesounds = (query, minMax) => {
       }
     );
   });
+};
+
+export const getSoundUrl = async (query, minMax) => {
+  console.log('getsoundurl', query, minMax);
+  const freeSounds = await getFreesounds(query, minMax).catch(error => {
+    console.log('get sounds error:', error);
+  });
+
+  if (!freeSounds) return '';
+  return getRandomIn(freeSounds).previews['preview-hq-mp3'];
 };
 
 export const getCleverbotReply = (query, cs) => {

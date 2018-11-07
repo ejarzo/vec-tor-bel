@@ -21,6 +21,8 @@ class YoutubeVideo extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.volume !== this.props.volume) {
+      console.log('updating volume');
+      console.log(prevProps.volume, this.props.volume);
       this.player && this.player.setVolume(this.props.volume);
     }
   }
@@ -56,7 +58,6 @@ class YoutubeVideo extends Component {
           top: 0,
           width: '100vw',
           mixBlendMode: isTop && 'multiply',
-          // transform: `scale3d(${scale}, ${scale}, 1) translate(${translateX}%, ${translateY}%)`,
           transition: 'filter 1s',
           opacity: isVisible ? 1 : 0,
           height: '100%',

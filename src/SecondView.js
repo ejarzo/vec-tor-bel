@@ -26,8 +26,9 @@ class QuantumTicTacToe extends Component {
   }
 
   render() {
-    const n = this.state.replies.length;
-    const latestReply = this.state.replies[n - 1];
+    const { replies, intensity } = this.state;
+    const n = replies.length;
+    const latestReply = replies[n - 1];
     return (
       <div
         style={{
@@ -37,8 +38,6 @@ class QuantumTicTacToe extends Component {
           gridTemplateColumns: '300px 1fr',
         }}
       >
-        {/*<div>intensity: {this.state.intensity}</div>*/}
-
         <div>
           <QuantumTicTacToeBoard replies={this.state.replies} />
         </div>
@@ -52,6 +51,29 @@ class QuantumTicTacToe extends Component {
             fontFamily: 'Roboto',
           }}
         >
+          <div
+            className="spin"
+            style={{
+              position: 'absolute',
+              right: 20,
+              width: 50,
+              height: 50,
+              borderRadius: '50%',
+              border: '1px solid white',
+              animationDuration: `${intensity * 2}s`,
+            }}
+          >
+            <div
+              style={{
+                position: 'absolute',
+                left: 2,
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                background: 'white',
+              }}
+            />
+          </div>
           <div style={{ position: 'absolute', bottom: 20 }}>
             {this.state.replies.map(({ text }) => (
               <div style={{ paddingTop: 5, width: '100%' }}>{text}</div>

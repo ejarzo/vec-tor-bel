@@ -36,13 +36,11 @@ class QuantumTicTacToeBoard extends Component {
 
   updateScores() {
     const scores = this.board.scores();
-    console.log(scores);
     const { totalScoreX, totalScoreO } = this.state;
     this.setState({
       totalScoreX: totalScoreX + scores.X / 2,
       totalScoreO: totalScoreO + scores.O / 2,
     });
-    console.log(scores);
   }
 
   stringifyScores() {
@@ -50,11 +48,10 @@ class QuantumTicTacToeBoard extends Component {
     if (!scores) {
       return;
     }
+
     function stringify(player) {
-      console.log(player);
-      var result,
-        half = '\u00bd',
-        score = scores[player];
+      const half = '\u00bd';
+      const score = scores[player];
       switch (score) {
         case 0:
           return '0';
@@ -66,8 +63,9 @@ class QuantumTicTacToeBoard extends Component {
           return '1' + half;
         case 4:
           return '2';
+        default:
+          return '';
       }
-      return '';
     }
 
     return stringify(Board.PLAYERX) + ' \u2014 ' + stringify(Board.PLAYERO);
@@ -152,7 +150,7 @@ class QuantumTicTacToeBoard extends Component {
   render() {
     return (
       <div style={{ border: '1px solid white', fontFamily: 'Input Mono' }}>
-        <button
+        {/*<button
           onClick={() => {
             this.board.clear();
             this.setState({
@@ -175,7 +173,7 @@ class QuantumTicTacToeBoard extends Component {
           }}
         >
           updateScores
-        </button>
+        </button>*/}
         <div style={{ width: 300, display: 'flex', flexWrap: 'wrap' }}>
           {this.board._board.map((cellOrCells, i) => {
             const isHighlighted = this.board.canMove({
