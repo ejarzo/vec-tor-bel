@@ -149,7 +149,7 @@ class QuantumTicTacToeBoard extends Component {
 
   render() {
     return (
-      <div style={{ border: '1px solid white', fontFamily: 'Input Mono' }}>
+      <div style={{ fontFamily: 'Input Mono' }}>
         {/*<button
           onClick={() => {
             this.board.clear();
@@ -174,7 +174,7 @@ class QuantumTicTacToeBoard extends Component {
         >
           updateScores
         </button>*/}
-        <div style={{ width: 300, display: 'flex', flexWrap: 'wrap' }}>
+        <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap' }}>
           {this.board._board.map((cellOrCells, i) => {
             const isHighlighted = this.board.canMove({
               type: Board.COLLAPSE,
@@ -190,8 +190,8 @@ class QuantumTicTacToeBoard extends Component {
               <div
                 onClick={() => this.makeMove(i + 1)}
                 style={{
-                  width: 100,
-                  height: 100,
+                  width: `${100 / 3}%`,
+                  height: 190,
                   border: '1px solid white',
                   background: isHighlighted ? '#444' : 'transparent',
                   display: 'flex',
@@ -223,9 +223,9 @@ class QuantumTicTacToeBoard extends Component {
             );
           })}
         </div>
-        <div style={{ padding: 2 }}>
+        <div style={{ padding: 20 }}>
           {this.board.gameOver() && (
-            <div>
+            <div style={{ marginBottom: 20 }}>
               <div>GAME OVER</div>
               <div>Score: {this.stringifyScores()}</div>
             </div>

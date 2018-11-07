@@ -124,7 +124,9 @@ export const getFreesounds = (query, minMax) => {
           console.log('SOUND RESULTS', results);
           resolve(
             results.filter(
-              ({ username }) => excludeList.indexOf(username) === -1
+              ({ name, username }) =>
+                excludeList.indexOf(username) === -1 &&
+                !name.includes('horror cries')
             )
           );
         } else {

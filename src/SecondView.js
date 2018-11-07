@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import QuantumTicTacToeBoard from 'components/QuantumTicTacToeBoard';
 import ConversationSummaryGraph from 'components/ConversationSummaryGraph';
+
 class QuantumTicTacToe extends Component {
   constructor(props) {
     super(props);
@@ -32,13 +33,23 @@ class QuantumTicTacToe extends Component {
     return (
       <div
         style={{
+          fontSize: '1.5em',
           display: 'grid',
+          height: '100vh',
           color: 'white',
           padding: 20,
-          gridTemplateColumns: '300px 1fr',
+          gridTemplateColumns: '1fr 1fr',
+          gridTemplateRows: '1fr 1fr',
         }}
       >
-        <div>
+        <div
+          style={{
+            border: '2px solid white',
+            height: '100%',
+            overflow: 'hidden',
+            position: 'relative',
+          }}
+        >
           <QuantumTicTacToeBoard replies={this.state.replies} />
         </div>
         <div
@@ -80,9 +91,20 @@ class QuantumTicTacToe extends Component {
             ))}
           </div>
         </div>
-        <div>
+        <div
+          style={{
+            padding: 20,
+            border: '2px solid white',
+            height: '100%',
+            overflow: 'hidden',
+            position: 'relative',
+            gridColumn: '1 / 3',
+          }}
+        >
           {latestReply && (
             <ConversationSummaryGraph
+              width={1000}
+              height={902}
               enabled
               currEmotion={latestReply.emotion}
             />
