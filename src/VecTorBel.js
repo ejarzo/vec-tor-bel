@@ -19,6 +19,8 @@ import {
   getLanguage,
 } from 'middleware/middleware.js';
 
+const delay = time => new Promise(res => setTimeout(() => res(), time));
+
 const scale = (num, in_min, in_max, out_min, out_max) => {
   return ((num - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min;
 };
@@ -33,6 +35,7 @@ class VecTorBel extends Component {
       runIndefinitely: true,
 
       showEye: false,
+      showGraph: true,
       showVideo: true,
       showTreemap: false,
 
@@ -44,7 +47,8 @@ class VecTorBel extends Component {
       voices: [],
       currentVoice: null,
 
-      videoId: '',
+      videoIds: ['', '', '', ''],
+      latestVideoId: '',
       videoComments: [],
 
       soundUrl: '',
@@ -54,8 +58,10 @@ class VecTorBel extends Component {
       youtubeBlurAmount2: 0,
 
       responsesPerCycle: 10,
+      repliesUntilReset: 2,
 
       commentHeight: 0,
+      videoCount: 0,
     };
 
     this.state = this.initState;
@@ -66,6 +72,8 @@ class VecTorBel extends Component {
 
     this.getVoices = this.getVoices.bind(this);
     this.getNextReply = this.getNextReply.bind(this);
+    this.setNewVideo = this.setNewVideo.bind(this);
+    this.clearVideos = this.clearVideos.bind(this);
   }
 
   getIntensityFromCount(count) {
@@ -95,6 +103,30 @@ class VecTorBel extends Component {
     }
   }
 
+  setNewVideo(videoId) {
+    console.log('==========');
+    console.log('setting video id', videoId);
+    if (!videoId) return;
+    const { videoCount } = this.state;
+    const videoIds = this.state.videoIds.slice();
+    console.log('at index', videoCount & 4);
+
+    videoIds[videoCount % 4] = videoId;
+    this.setState({
+      videoIds,
+      latestVideoId: videoId,
+      videoCount: videoCount + 1,
+    });
+  }
+
+  clearVideos() {
+    this.setState({
+      videoIds: ['', '', '', ''],
+      latestVideoId: '',
+      videoCount: 0,
+    });
+  }
+
   getVoices() {
     if (typeof speechSynthesis === 'undefined') {
       return;
@@ -118,11 +150,26 @@ class VecTorBel extends Component {
     return { text: initArticle.title, source: 'news' };
   }
 
-  reset() {
+  async reset() {
     this.setState({
-      count: 0,
-      replies: [],
+      showTreemap: true,
     });
+    // TODO: fade out sounds
+
+    this.channel.postMessage({ clearTreemap: true });
+    await delay(20000);
+
+    this.clearVideos();
+    this.setState({
+      showTreemap: false,
+      showGraph: false,
+    });
+
+    await delay(15000);
+    this.setState({
+      showGraph: true,
+    });
+
     this.begin();
   }
 
@@ -137,10 +184,11 @@ class VecTorBel extends Component {
 
     // initialize with top headline
     this.setState({
+      count: 1,
       replies: [nextReply],
-      videoId,
       soundUrl,
     });
+    this.setNewVideo(videoId);
 
     this.channel.postMessage({ replies: [nextReply], intensity: 2 });
     this.speak(nextReply, 1);
@@ -174,9 +222,10 @@ class VecTorBel extends Component {
     const intensity = this.getIntensityFromCount(count);
     console.log('speaking intensity', intensity);
 
-    const resetOnNextReply = count > 0 && count % 5 === 0;
+    const resetOnNextReply =
+      count > 0 && count % this.state.repliesUntilReset === 0;
 
-    const onEnd = () => {
+    const onEnd = async () => {
       // synth.cancel();
       this.setState({ showCommentOverlay: false, isSpeaking: false });
 
@@ -189,7 +238,8 @@ class VecTorBel extends Component {
         if (resetOnNextReply) {
           this.reset();
         } else {
-          setTimeout(this.getNextReply, maxTimeUntilNextResponse * 1000);
+          await delay(maxTimeUntilNextResponse * 1000);
+          this.getNextReply();
         }
       }
     };
@@ -216,7 +266,7 @@ class VecTorBel extends Component {
     const {
       replies,
       count,
-      videoId,
+      latestVideoId,
       responsesBetweenYoutubeComments,
     } = this.state;
 
@@ -234,7 +284,7 @@ class VecTorBel extends Component {
       replies.length === 2 ||
       replies.length % responsesBetweenYoutubeComments === 0
     ) {
-      videoComments = await getYoutubeComments(videoId).catch(error => {
+      videoComments = await getYoutubeComments(latestVideoId).catch(error => {
         return null;
       });
     }
@@ -253,6 +303,7 @@ class VecTorBel extends Component {
         }),
       ]);
 
+      this.setState({ isSpeaking: true });
       const alertSound = new Howl({
         src: [alertSoundUrl],
         onend: () => {
@@ -267,11 +318,7 @@ class VecTorBel extends Component {
         showCommentOverlay: true,
       });
 
-      if (nextVideoId) {
-        this.setState({
-          videoId: nextVideoId,
-        });
-      }
+      this.setNewVideo(nextVideoId);
       this.channel.postMessage({ replies: nextReplies, intensity });
     } else {
       // Get cleverbot response
@@ -304,11 +351,7 @@ class VecTorBel extends Component {
         filterColor: emotionColor,
       });
 
-      if (nextVideoId) {
-        this.setState({
-          videoId: nextVideoId,
-        });
-      }
+      this.setNewVideo(nextVideoId);
 
       if (soundUrl || emotionSoundUrl) {
         this.setState({
@@ -325,8 +368,9 @@ class VecTorBel extends Component {
     const {
       showEye,
       showVideo,
+      showGraph,
       showTreemap,
-      videoId,
+      videoIds,
       replies,
       lastCBResponse,
       youtubeBlurAmount1,
@@ -356,7 +400,7 @@ class VecTorBel extends Component {
               count={n}
               blurAmount1={youtubeBlurAmount1}
               blurAmount2={youtubeBlurAmount2}
-              videoId={videoId}
+              videoIds={videoIds}
               volume={inverseIntensity > 1.5 ? 100 : 0}
             />
           </div>
@@ -383,13 +427,14 @@ class VecTorBel extends Component {
         />*/}
 
         <div className="SketchContainer">
-          {latestReply && (
-            <Sketch1
-              newReply={latestReply}
-              newData={lastCBResponse}
-              count={this.state.count}
-            />
-          )}
+          {latestReply &&
+            showGraph && (
+              <Sketch1
+                newReply={latestReply}
+                newData={lastCBResponse}
+                count={this.state.count}
+              />
+            )}
         </div>
 
         {latestReply && (
@@ -423,6 +468,7 @@ class VecTorBel extends Component {
             </ReactHeight>
           </div>
         )}
+
         <div className="controls" style={{ zIndex: 20 }}>
           <button onClick={this.begin}>BEGIN</button>
           <button onClick={this.reset}>RESET</button>
@@ -492,7 +538,7 @@ class VecTorBel extends Component {
           </button>
         </div>
 
-        <NewsHeadline headline={this.state.replies[0]} />
+        {latestReply && <NewsHeadline latestReply={latestReply} />}
 
         <AudioPlayer
           src={soundUrl}

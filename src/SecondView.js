@@ -2,11 +2,12 @@ import React, { Component } from 'react';
 import QuantumTicTacToeBoard from 'components/QuantumTicTacToeBoard';
 import ConversationSummaryGraph from 'components/ConversationSummaryGraph';
 
-class QuantumTicTacToe extends Component {
+class SecondView extends Component {
   constructor(props) {
     super(props);
-    this.state = { replies: [], intensity: 0 };
+    this.state = { replies: [], intensity: 0, treemapEnabled: true };
   }
+
   componentDidMount() {
     // Connect to the channel named "ttt".
     this.channel = new window.BroadcastChannel('ttt');
@@ -17,7 +18,21 @@ class QuantumTicTacToe extends Component {
     // Listen for messages on "ttt".
     this.channel.onmessage = ({ data }) => {
       console.log('Received', data);
-      this.setState({ replies: data.replies, intensity: data.intensity });
+      if (data.replies) {
+        this.setState({ replies: data.replies });
+      }
+      if (data.intensity >= 0) {
+        this.setState({ replies: data.replies });
+      }
+      if (data.clearTreemap) {
+        this.setState({ treemapEnabled: false });
+        setTimeout(() => {
+          this.setState({
+            treemapEnabled: true,
+            replies: [],
+          });
+        }, 20000);
+      }
     };
   }
 
@@ -105,7 +120,7 @@ class QuantumTicTacToe extends Component {
             <ConversationSummaryGraph
               width={1000}
               height={902}
-              enabled
+              enabled={this.state.treemapEnabled}
               currEmotion={latestReply.emotion}
             />
           )}
@@ -115,4 +130,4 @@ class QuantumTicTacToe extends Component {
   }
 }
 
-export default QuantumTicTacToe;
+export default SecondView;

@@ -40,62 +40,23 @@ class YoutubePlayer extends Component {
     });
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.videoId !== this.props.videoId) {
-      // console.log('UPDATE', prevProps.videoId, this.props.videoId);
-      if (this.props.count % 2 === 0) {
-        this.setState({
-          topVideoId: this.props.videoId,
-        });
-      } else if (this.props.count % 3 === 0) {
-        this.setState({
-          topVideoId2: this.props.videoId,
-        });
-      } else if (this.props.count % 4 === 0) {
-        this.setState({
-          topVideoId3: this.props.videoId,
-        });
-      } else {
-        this.setState({
-          bottomVideoId: this.props.videoId,
-        });
-      }
-    }
-  }
-
   render() {
-    const { blurAmount1, blurAmount2, volume } = this.props;
-    const { topVideoId, topVideoId2, topVideoId3, bottomVideoId } = this.state;
-
+    const { videoIds, volume, blurAmount1 } = this.props;
     return (
       <div>
-        <YoutubeVideo
-          videoId={bottomVideoId}
-          blurAmount={blurAmount1}
-          options={options}
-          volume={volume * 0.8}
-        />
-        <YoutubeVideo
-          isTop
-          videoId={topVideoId}
-          blurAmount={blurAmount2}
-          options={options}
-          volume={volume * 0.8}
-        />
-        <YoutubeVideo
-          isTop
-          videoId={topVideoId2}
-          blurAmount={blurAmount2}
-          options={options}
-          volume={volume * 0.8}
-        />
-        <YoutubeVideo
-          isTop
-          videoId={topVideoId3}
-          blurAmount={blurAmount2}
-          options={options}
-          volume={volume * 0.8}
-        />
+        {videoIds.map(
+          (id, i) =>
+            id && (
+              <YoutubeVideo
+                key={id}
+                videoId={id}
+                blurAmount={blurAmount1}
+                options={options}
+                volume={volume * 0.8}
+                isTop={i !== 0}
+              />
+            )
+        )}
       </div>
     );
   }

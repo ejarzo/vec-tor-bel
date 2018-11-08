@@ -8,16 +8,29 @@ class NewsHeadline extends Component {
     };
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.headline !== prevProps.headline) {
+  componentDidMount(prevProps) {
+    if (this.props.latestReply.source === 'news') {
       this.setState({
         isAnimating: true,
       });
     }
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.latestReply !== prevProps.latestReply) {
+      this.setState({
+        isAnimating: true,
+      });
+      setTimeout(() => {
+        this.setState({
+          isAnimating: false,
+        });
+      }, 20000);
+    }
+  }
+
   render() {
-    const { headline } = this.props;
+    const { latestReply } = this.props;
     const { isAnimating } = this.state;
 
     return (
@@ -29,11 +42,12 @@ class NewsHeadline extends Component {
           fontSize: '3em',
           whiteSpace: 'nowrap',
           transition: 'all 20s linear',
-          transform: `translateX(${isAnimating ? '-100%' : '100vw'})`,
+          visibility: isAnimating ? 'visible' : 'hidden',
+          transform: `translate3d(${isAnimating ? '-100%' : '100vw'}, 0, 0)`,
           color: 'white',
         }}
       >
-        {headline && headline.text}
+        {isAnimating && latestReply.source === 'news' && latestReply.text}
       </div>
     );
   }

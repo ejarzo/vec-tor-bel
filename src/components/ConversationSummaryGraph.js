@@ -14,14 +14,8 @@ for (const key in emotionLists) {
   emotionCategories.push({
     title: '',
     emotionCategory: key,
-    // size: 1,
     color: rgbToHex(getColorForEmotionCategory(key)),
     children: [],
-    // children: emotionLists[key].map(emotion => ({
-    //   title: emotion,
-    //   color: rgbToHex(getColorForEmotionCategory(key)),
-    //   size: 0,
-    // })),
   });
 }
 
@@ -31,10 +25,14 @@ const data = {
   children: emotionCategories,
 };
 
-class AudioPlayer extends Component {
+class ConversationSumaryGraph extends Component {
   constructor(props) {
     super(props);
-    this.state = { data, width: 0, height: 9 };
+    this.state = {
+      data,
+      isVisible: props.enabled,
+      isEnabled: props.enabled,
+    };
     this.addEmotionToGraph = this.addEmotionToGraph.bind(this);
   }
 
@@ -49,12 +47,49 @@ class AudioPlayer extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (
+    if (prevProps.enabled && !this.props.enabled) {
+      this.setState({
+        isVisible: false,
+      });
+
+      setTimeout(() => {
+        const newEmotionCategories = [];
+
+        for (const key in emotionLists) {
+          newEmotionCategories.push({
+            title: '',
+            emotionCategory: key,
+            color: rgbToHex(getColorForEmotionCategory(key)),
+            children: [],
+          });
+        }
+
+        this.setState({
+          isEnabled: false,
+          data: {
+            title: '',
+            color: '#000',
+            children: newEmotionCategories,
+          },
+        });
+      }, 15000);
+    } else if (
       this.props.currEmotion &&
       prevProps.currEmotion !== this.props.currEmotion
     ) {
       console.log('GOT EMOTION', this.props.currEmotion);
       this.addEmotionToGraph(this.props.currEmotion);
+    }
+
+    if (!prevProps.enabled && this.props.enabled) {
+      this.setState({
+        isEnabled: true,
+      });
+      setTimeout(() => {
+        this.setState({
+          isVisible: true,
+        });
+      }, 50);
     }
   }
 
@@ -88,40 +123,36 @@ class AudioPlayer extends Component {
   }
 
   render() {
-    const { src, enabled } = this.props;
-    const { width, height, data } = this.state;
-    if (!width) {
+    const { data, isEnabled, isVisible, width, height } = this.state;
+
+    if (!width || !isEnabled) {
       return null;
     }
 
-    if (!enabled) {
-      return null;
-    }
     return (
       <div
         style={{
           transition: 'all 15s',
-          filter: enabled ? 'none' : 'blur(200px)',
-          opacity: enabled ? '1' : '0',
-          mixBlendMode: 'overlay',
+          filter: isVisible ? 'none' : 'blur(200px)',
+          opacity: isVisible ? '1' : '0',
+          // mixBlendMode: 'overlay',
         }}
       >
         <Treemap
           {...{
-            // animation: true,
+            // animation: false,
             colorType: 'literal',
             colorRange: ['#88572C'],
             data,
             mode: 'squarify',
             renderMode: 'SVG',
-            height: this.props.height || this.state.height,
-            width: this.props.width || this.state.height,
+            height: this.props.height || height,
+            width: this.props.width || width,
             margin: 0,
             getSize: d => d.size,
             getColor: d => d.color,
             style: {
               stroke: '#000',
-              // fillOpacity: '0.4',
               strokeWidth: '0.5',
               strokeOpacity: '0.25',
             },
@@ -132,4 +163,4 @@ class AudioPlayer extends Component {
   }
 }
 
-export default AudioPlayer;
+export default ConversationSumaryGraph;
