@@ -160,7 +160,7 @@ export const getSoundUrl = async (query, minMax) => {
     };
   const sound = getRandomIn(freeSounds);
   return {
-    soundUrl: sound.previews['preview-hq-mp3'],
+    soundUrl: sound.previews['preview-lq-mp3'],
     soundAuthor: sound.username,
   };
 };

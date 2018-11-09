@@ -7,6 +7,7 @@ class YoutubeVideo extends Component {
     this.state = {
       isVisible: false,
       videoId: props.videoId || '',
+      blendMode: 'multiply',
     };
     this.handleReady = this.handleReady.bind(this);
     this.handleStateChange = this.handleStateChange.bind(this);
@@ -39,6 +40,7 @@ class YoutubeVideo extends Component {
     if (e.data === 1) {
       this.setState({
         isVisible: true,
+        blendMode: Math.random() < 0.2 ? 'difference' : 'multiply',
       });
     } else if (e.data === -1) {
       this.setState({
@@ -57,7 +59,7 @@ class YoutubeVideo extends Component {
           position: 'absolute',
           top: 0,
           width: '100vw',
-          mixBlendMode: isTop && 'multiply',
+          mixBlendMode: isTop && this.state.blendMode,
           transition: 'filter 1s',
           opacity: isVisible ? 1 : 0,
           height: '100%',

@@ -52,7 +52,7 @@ class YoutubePlayer extends Component {
                 videoId={id}
                 blurAmount={blurAmount1}
                 options={options}
-                volume={volume * 0.8}
+                volume={volume * 0.9}
                 isTop={i !== 0}
               />
             )

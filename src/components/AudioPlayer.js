@@ -18,13 +18,13 @@ class AudioPlayer extends React.Component {
     this.volume = new Tone.Volume();
 
     const masterLimiter = new Tone.Limiter(-2);
-    const reverb = new Tone.Freeverb();
+    this.reverb = new Tone.Freeverb();
     this.filter = new Tone.Filter();
     const masterOutput = new Tone.Gain(0.9).receive('masterOutput');
 
     masterOutput.chain(
       this.filter,
-      reverb,
+      this.reverb,
       masterCompressor,
       masterLimiter,
       this.volume,
@@ -44,16 +44,25 @@ class AudioPlayer extends React.Component {
     const { src, count } = this.props;
     if (this.props.src && prevProps.src !== src) {
       const player = this.players[count % 10];
-      player.stop('+0.2');
+      player.stop('+0.3');
       player.load(src, () => {
-        player.start('+0.2');
+        player.start('+5');
       });
     }
 
     if (this.props.intensity !== !prevProps.intensity) {
       const freq = this.props.intensity * 10000 + 50;
+      let roomSize = this.props.intensity / 2;
+      if (roomSize > 0.8) {
+        roomSize = 0.8;
+      }
+      if (roomSize < 0) {
+        roomSize = 0;
+      }
+      console.log(roomSize);
       console.log(this.props.intensity, freq);
       this.filter.frequency.rampTo(freq, 5);
+      this.reverb.roomSize.rampTo(roomSize, 5);
     }
 
     if (this.props.isSpeaking && !prevProps.isSpeaking) {

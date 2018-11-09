@@ -62,7 +62,7 @@ class VecTorBel extends Component {
       youtubeBlurAmount2: 0,
 
       responsesPerCycle: 30,
-      repliesUntilReset: 2,
+      repliesUntilReset: 60,
 
       credits: [],
     };
