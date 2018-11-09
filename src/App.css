@@ -48,7 +48,58 @@ button {
   }
 }
 
+.credits-container {
+  position: relative;
+  animation-name: scroll2;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: 20s;
+}
+.credit {
+  position: relative;
+  animation-name: scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: 5s;
+  margin: 0 auto;
+  left: 0;
+  right: 0;
+  height: 1em;
+  top: -40px;
+  mix-blend-mode: difference;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translate3d(0, 100%, 0);
+  }
+  99% {
+    transform: translate3d(0, -100%, 0);
+  }
+  100% {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+@keyframes scroll2 {
+  0% {
+    visibility: visible;
+    transform: translate3d(0, 100%, 0);
+  }
+  100% {
+    visibility: hidden;
+    transform: translate3d(0, -100%, 0);
+  }
+}
+
 .spin {
+  position: absolute;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 1px solid white;
+
   animation-name: spin;
   animation-timing-function: linear;
   animation-iteration-count: infinite;

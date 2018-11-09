@@ -33,6 +33,7 @@ export const getYoutubeVideos = query => {
   return new Promise((resolve, reject) => {
     fetchYoutubeResults(query).then(
       data => {
+        console.log(data);
         const { items } = data;
         if (items.length > 0) {
           resolve(items);
@@ -47,7 +48,7 @@ export const getYoutubeVideos = query => {
   });
 };
 
-export const getYoutubeVideoId = async query => {
+export const getYoutubeVideo = async query => {
   const videos = await getYoutubeVideos(query).catch(error => {
     console.log('error getting videos');
     console.log(error);
@@ -56,7 +57,12 @@ export const getYoutubeVideoId = async query => {
 
   if (videos.length > 0) {
     const randomVideo = getRandomIn(videos);
-    return randomVideo.id.videoId;
+    console.log('RANDOM VIDEO:', randomVideo);
+    return {
+      videoId: randomVideo.id.videoId,
+      videoAuthor: randomVideo.snippet.channelTitle,
+      videoTitle: randomVideo.snippet.title,
+    };
   }
 
   return '';
@@ -147,8 +153,16 @@ export const getSoundUrl = async (query, minMax) => {
     console.log('get sounds error:', error);
   });
 
-  if (!freeSounds) return '';
-  return getRandomIn(freeSounds).previews['preview-hq-mp3'];
+  if (!freeSounds)
+    return {
+      // soundUrl: '',
+      // soundAuthor: '',
+    };
+  const sound = getRandomIn(freeSounds);
+  return {
+    soundUrl: sound.previews['preview-hq-mp3'],
+    soundAuthor: sound.username,
+  };
 };
 
 export const getCleverbotReply = (query, cs) => {
@@ -195,7 +209,6 @@ export const getLanguage = async query => {
     const { results } = await fetchApi(url, params);
     const firstResult = results[0];
     return firstResult;
-    // return firstResult.reliable_result ? firstResult.language_code : 'en';
   } catch (error) {
     return 'en';
   }

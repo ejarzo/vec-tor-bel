@@ -57,16 +57,7 @@ export default function sketch(p) {
     replyData.reply = newReply.text || '';
   };
 
-  // let percentage = 0;
   p.draw = () => {
-    // if (replyData.reply !== lastReply) {
-    //   p.fill(255);
-    //   // p.textAlign(p.CENTER);
-    //   // p.text(replyData.reply, targetPoint.x || 20, targetPoint.y || 20);
-    //   // replyData.x = width / 2;
-    //   // replyData.y = height / 2;
-    // }
-
     const randomModifier = emotionGraphNoiseAmounts[replyData.emotion] * 0.9;
     let xMod = 0;
     let yMod = 0;

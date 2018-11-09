@@ -5,31 +5,37 @@ import ConversationSummaryGraph from 'components/ConversationSummaryGraph';
 class SecondView extends Component {
   constructor(props) {
     super(props);
-    this.state = { replies: [], intensity: 0, treemapEnabled: true };
+    this.state = {
+      intensity: 0,
+      replies: [],
+      credits: [],
+      treemapEnabled: true,
+    };
   }
 
   componentDidMount() {
-    // Connect to the channel named "ttt".
     this.channel = new window.BroadcastChannel('ttt');
-
-    // Send a message on "ttt".
-    this.channel.postMessage('This is a test message.');
-
-    // Listen for messages on "ttt".
     this.channel.onmessage = ({ data }) => {
       console.log('Received', data);
       if (data.replies) {
         this.setState({ replies: data.replies });
       }
+
       if (data.intensity >= 0) {
-        this.setState({ replies: data.replies });
+        this.setState({ intensity: data.intensity });
       }
+
+      if (data.credits) {
+        this.setState({ credits: data.credits });
+      }
+
       if (data.clearTreemap) {
         this.setState({ treemapEnabled: false });
         setTimeout(() => {
           this.setState({
             treemapEnabled: true,
             replies: [],
+            credits: [],
           });
         }, 20000);
       }
@@ -37,14 +43,14 @@ class SecondView extends Component {
   }
 
   componentWillUnmount() {
-    // Close the channel when you're done.
     this.channel.close();
   }
 
   render() {
-    const { replies, intensity } = this.state;
+    const { replies, intensity, credits, treemapEnabled } = this.state;
     const n = replies.length;
     const latestReply = replies[n - 1];
+
     return (
       <div
         style={{
@@ -65,11 +71,10 @@ class SecondView extends Component {
             position: 'relative',
           }}
         >
-          <QuantumTicTacToeBoard replies={this.state.replies} />
+          <QuantumTicTacToeBoard replies={replies} />
         </div>
         <div
           style={{
-            padding: 20,
             border: '2px solid white',
             height: '100%',
             overflow: 'hidden',
@@ -78,32 +83,65 @@ class SecondView extends Component {
           }}
         >
           <div
-            className="spin"
             style={{
-              position: 'absolute',
-              right: 20,
-              width: 50,
-              height: 50,
-              borderRadius: '50%',
-              border: '1px solid white',
-              animationDuration: `${intensity * 2}s`,
+              height: '50%',
+              borderBottom: '2px solid white',
+              padding: 20,
+              position: 'relative',
             }}
           >
             <div
+              className="spin"
               style={{
-                position: 'absolute',
-                left: 2,
-                width: 10,
-                height: 10,
-                borderRadius: '50%',
-                background: 'white',
+                animationDuration: `${intensity * 2}s`,
               }}
-            />
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 2,
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  background: 'white',
+                }}
+              />
+            </div>
+
+            <div style={{ position: 'absolute', bottom: 20 }}>
+              {replies.map(({ text, source }) => (
+                <div style={{ paddingTop: 5, width: '100%' }}>
+                  <span
+                    style={{
+                      // fontWeight: source === 'news' && 'bold',
+                      // fontStyle: source === 'comment' && 'italic',
+                      color:
+                        source === 'comment'
+                          ? '#FF0001'
+                          : source === 'news' && '#2a4aea',
+                    }}
+                  >
+                    {text}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div style={{ position: 'absolute', bottom: 20 }}>
-            {this.state.replies.map(({ text }) => (
-              <div style={{ paddingTop: 5, width: '100%' }}>{text}</div>
-            ))}
+          {/* ---- credits ----- */}
+          <div
+            style={{
+              textAlign: 'center',
+              height: '50%',
+              padding: 20,
+              overflow: 'hidden',
+              position: 'relative',
+            }}
+          >
+            <div className="credits-container">
+              {credits.map(({ name }) => (
+                <div className="credit">{name}</div>
+              ))}
+            </div>
           </div>
         </div>
         <div
@@ -116,11 +154,11 @@ class SecondView extends Component {
             gridColumn: '1 / 3',
           }}
         >
-          {latestReply && (
+          {replies.length > 0 && (
             <ConversationSummaryGraph
               width={1000}
               height={902}
-              enabled={this.state.treemapEnabled}
+              enabled={treemapEnabled}
               currEmotion={latestReply.emotion}
             />
           )}

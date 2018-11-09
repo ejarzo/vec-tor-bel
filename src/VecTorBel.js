@@ -15,7 +15,7 @@ import {
   getSoundUrl,
   getCleverbotReply,
   getNews,
-  getYoutubeVideoId,
+  getYoutubeVideo,
   getLanguage,
 } from 'middleware/middleware.js';
 
@@ -39,6 +39,9 @@ class VecTorBel extends Component {
       showVideo: true,
       showTreemap: false,
 
+      cycleCount: 0,
+      headlines: [],
+
       replies: [],
       lastCBResponse: { cs: '' },
       count: 0,
@@ -47,6 +50,7 @@ class VecTorBel extends Component {
       voices: [],
       currentVoice: null,
 
+      videoCount: 0,
       videoIds: ['', '', '', ''],
       latestVideoId: '',
       videoComments: [],
@@ -57,11 +61,10 @@ class VecTorBel extends Component {
       youtubeBlurAmount1: 0,
       youtubeBlurAmount2: 0,
 
-      responsesPerCycle: 10,
+      responsesPerCycle: 30,
       repliesUntilReset: 2,
 
-      commentHeight: 0,
-      videoCount: 0,
+      credits: [],
     };
 
     this.state = this.initState;
@@ -104,12 +107,9 @@ class VecTorBel extends Component {
   }
 
   setNewVideo(videoId) {
-    console.log('==========');
-    console.log('setting video id', videoId);
     if (!videoId) return;
     const { videoCount } = this.state;
     const videoIds = this.state.videoIds.slice();
-    console.log('at index', videoCount & 4);
 
     videoIds[videoCount % 4] = videoId;
     this.setState({
@@ -127,6 +127,14 @@ class VecTorBel extends Component {
     });
   }
 
+  // setNewCredit({name, source, text}) {
+  //   const { credits } = this.state;
+  //   const newCredits = credits.slice();
+  //   newCredits.push({name, source, text});
+  //   this.setState({ credits: newCredits })
+  //   this.
+  // }
+
   getVoices() {
     if (typeof speechSynthesis === 'undefined') {
       return;
@@ -137,17 +145,54 @@ class VecTorBel extends Component {
     return voices;
   }
 
-  async getNewsReply() {
-    const { articles } = await getNews().catch(error => {
-      console.log(error);
-      return {};
-      // TODO: handle get news error
+  async begin() {
+    const { headlines, cycleCount } = this.state;
+    let nextHeadlines = headlines;
+    const nextIndex = cycleCount % 10;
+    if (nextIndex === 0) {
+      // update news list
+      const { articles } = await getNews();
+      nextHeadlines = articles;
+      this.setState({ headlines: articles });
+    }
+
+    const currentHeadline = nextHeadlines[nextIndex];
+    const nextReply = { text: currentHeadline.title, source: 'news' };
+
+    // search top headline on youtube
+    const [
+      { videoId, videoAuthor, videoTitle },
+      { soundUrl, soundAuthor },
+    ] = await Promise.all([
+      getYoutubeVideo(nextReply.text),
+      getSoundUrl('news+breaking news', { min: 45, max: 300 }),
+    ]);
+
+    const videoCredit = {
+      name: videoAuthor,
+      source: 'youtube',
+      text: videoTitle,
+    };
+    const soundCredit = { name: soundAuthor, source: 'freesound' };
+
+    const newCredits = [videoCredit, soundCredit];
+
+    // initialize with top headline
+    this.setState({
+      count: 1,
+      replies: [nextReply],
+      soundUrl,
+      cycleCount: cycleCount + 1,
+      credits: newCredits,
     });
-    if (!articles) return;
+    this.setNewVideo(videoId);
 
-    let initArticle = articles[0];
-
-    return { text: initArticle.title, source: 'news' };
+    this.channel.postMessage({
+      replies: [nextReply],
+      intensity: 2,
+      credits: newCredits,
+    });
+    this.speak(nextReply, 1);
   }
 
   async reset() {
@@ -171,27 +216,6 @@ class VecTorBel extends Component {
     });
 
     this.begin();
-  }
-
-  async begin() {
-    const nextReply = await this.getNewsReply();
-
-    // search top headline on youtube
-    const [videoId, soundUrl] = await Promise.all([
-      getYoutubeVideoId(nextReply.text),
-      getSoundUrl('news+breaking news', { min: 45, max: 300 }),
-    ]);
-
-    // initialize with top headline
-    this.setState({
-      count: 1,
-      replies: [nextReply],
-      soundUrl,
-    });
-    this.setNewVideo(videoId);
-
-    this.channel.postMessage({ replies: [nextReply], intensity: 2 });
-    this.speak(nextReply, 1);
   }
 
   async speak({ text, source }, count) {
@@ -292,11 +316,15 @@ class VecTorBel extends Component {
     if (videoComments && videoComments.length > 0) {
       // use comment as reply
       const { text, author } = videoComments[0];
+
       const nextReply = { text, source: 'comment' };
       nextReplies.push(nextReply);
 
-      const [nextVideoId, alertSoundUrl] = await Promise.all([
-        getYoutubeVideoId(nextReply.text),
+      const [
+        { videoId, videoAuthor, videoTitle },
+        { soundUrl: alertSoundUrl },
+      ] = await Promise.all([
+        getYoutubeVideo(nextReply.text),
         getSoundUrl('computer alert', {
           min: 0,
           max: 2,
@@ -311,15 +339,31 @@ class VecTorBel extends Component {
         },
       }).play();
 
+      const commentCredit = { name: author, source: 'comment', text };
+      const videoCredit = {
+        name: videoAuthor,
+        source: 'youtube',
+        text: videoTitle,
+      };
+
+      const newCredits = this.state.credits.slice();
+      newCredits.push(commentCredit);
+      newCredits.push(videoCredit);
+
       this.setState({
         replies: nextReplies,
         count: count + 1,
         videoComments,
         showCommentOverlay: true,
+        credits: newCredits,
       });
 
-      this.setNewVideo(nextVideoId);
-      this.channel.postMessage({ replies: nextReplies, intensity });
+      this.setNewVideo(videoId);
+      this.channel.postMessage({
+        replies: nextReplies,
+        intensity,
+        credits: newCredits,
+      });
     } else {
       // Get cleverbot response
       const cleverbotResponse = await getCleverbotReply(
@@ -330,28 +374,49 @@ class VecTorBel extends Component {
       const nextReply = { text: output, source: 'cleverbot', emotion };
       nextReplies.push(nextReply);
 
-      const [nextVideoId, soundUrl] = await Promise.all([
-        getYoutubeVideoId(nextReply.text),
+      const [
+        { videoId, videoAuthor, videoTitle },
+        { soundUrl, soundAuthor },
+      ] = await Promise.all([
+        getYoutubeVideo(nextReply.text),
         getSoundUrl(nextReply.text, minMax),
       ]);
 
+      const newCredits = this.state.credits.slice();
+      const videoCredit = {
+        name: videoAuthor,
+        source: 'youtube',
+        text: videoTitle,
+      };
+      if (soundUrl) {
+        const soundCredit = { name: soundAuthor, source: 'freesound' };
+        newCredits.push(soundCredit);
+      }
+
+      newCredits.push(videoCredit);
+
       const emotionColor = getColorForEmotion(emotion);
-      const emotionSoundUrl =
+      const { soundUrl: emotionSoundUrl, soundAuthor: emotionSoundAuthor } =
         !soundUrl &&
         (await getSoundUrl(
           getEmotionCategoryForEmotion(`${emotion}+${reaction}`),
           minMax
         ));
 
+      if (emotionSoundUrl) {
+        const soundCredit = { name: emotionSoundAuthor, source: 'freesound' };
+        newCredits.push(soundCredit);
+      }
       this.setState({
         replies: nextReplies,
         lastCBResponse: cleverbotResponse,
         count: count + 1,
         showCommentOverlay: false,
         filterColor: emotionColor,
+        credits: newCredits,
       });
 
-      this.setNewVideo(nextVideoId);
+      this.setNewVideo(videoId);
 
       if (soundUrl || emotionSoundUrl) {
         this.setState({
@@ -359,7 +424,11 @@ class VecTorBel extends Component {
         });
       }
 
-      this.channel.postMessage({ replies: nextReplies, intensity });
+      this.channel.postMessage({
+        replies: nextReplies,
+        intensity,
+        credits: newCredits,
+      });
       this.speak(nextReply, count + 1);
     }
   }

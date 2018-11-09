@@ -8,25 +8,25 @@ import {
 } from 'utils/color';
 
 import './treemap.css';
-const emotionCategories = [];
-
-for (const key in emotionLists) {
-  emotionCategories.push({
-    title: '',
-    emotionCategory: key,
-    color: rgbToHex(getColorForEmotionCategory(key)),
-    children: [],
-  });
-}
-
-const data = {
-  title: '',
-  color: '#000',
-  children: emotionCategories,
-};
 
 class ConversationSumaryGraph extends Component {
   constructor(props) {
+    const emotionCategories = [];
+
+    for (const key in emotionLists) {
+      emotionCategories.push({
+        title: '',
+        emotionCategory: key,
+        color: rgbToHex(getColorForEmotionCategory(key)),
+        children: [],
+      });
+    }
+
+    const data = {
+      title: '',
+      color: '#000',
+      children: emotionCategories,
+    };
     super(props);
     this.state = {
       data,
