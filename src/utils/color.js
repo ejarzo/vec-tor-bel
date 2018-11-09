@@ -27,9 +27,9 @@ const getEmotionCategoryForEmotion = emotion => {
 };
 
 const getColorForEmotionCategory = input => {
-  let r = 0;
-  let g = 0;
-  let b = 0;
+  let r = 255;
+  let g = 255;
+  let b = 255;
 
   if (input === 'anger') {
     r = 175;

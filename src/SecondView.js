@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import QuantumTicTacToeBoard from 'components/QuantumTicTacToeBoard';
 import ConversationSummaryGraph from 'components/ConversationSummaryGraph';
+import YouTube from 'react-youtube';
+import { options } from 'components/YoutubePlayer';
 
 class SecondView extends Component {
   constructor(props) {
@@ -10,6 +12,8 @@ class SecondView extends Component {
       replies: [],
       credits: [],
       treemapEnabled: true,
+      videoVisible: false,
+      videoId: '',
     };
   }
 
@@ -23,6 +27,10 @@ class SecondView extends Component {
 
       if (data.intensity >= 0) {
         this.setState({ intensity: data.intensity });
+      }
+
+      if (data.videoId) {
+        this.setState({ videoId: data.videoId });
       }
 
       if (data.credits) {
@@ -47,7 +55,7 @@ class SecondView extends Component {
   }
 
   render() {
-    const { replies, intensity, credits, treemapEnabled } = this.state;
+    const { replies, intensity, credits, treemapEnabled, videoId } = this.state;
     const n = replies.length;
     const latestReply = replies[n - 1];
 
@@ -59,8 +67,8 @@ class SecondView extends Component {
           height: '100vh',
           color: 'white',
           padding: 20,
-          gridTemplateColumns: '1fr 1fr',
-          gridTemplateRows: '1fr 1fr',
+          gridTemplateColumns: '50% 50%',
+          gridTemplateRows: '50% 50%',
         }}
       >
         <div
@@ -72,6 +80,56 @@ class SecondView extends Component {
           }}
         >
           <QuantumTicTacToeBoard replies={replies} />
+          <div
+            style={{
+              position: 'relative',
+              height: '100%',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                height: '100%',
+                width: '100%',
+                position: 'absolute',
+                background: 'white',
+                zIndex: 1,
+                mixBlendMode: 'difference',
+              }}
+            />
+            <div
+              style={{
+                zIndex: 0,
+                borderTop: '2px solid white',
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: '100%',
+                height: '100%',
+                filter: 'blur(30px)',
+                transform: 'translate3d(-50%, -50%, 0) scale(5)',
+              }}
+            >
+              {videoId && (
+                <YouTube
+                  onStateChange={e => {
+                    if (e.data === 1) {
+                      this.setState({
+                        videoVisible: true,
+                      });
+                    } else {
+                      this.setState({
+                        videoVisible: false,
+                      });
+                    }
+                  }}
+                  onReady={() => {}}
+                  videoId={videoId}
+                  opts={options}
+                />
+              )}
+            </div>
+          </div>
         </div>
         <div
           style={{

@@ -1,7 +1,13 @@
 import { getRandomIn } from 'utils/data';
 
 const YOUTUBE_API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
-const FREESOUND_API_KEY = process.env.REACT_APP_FREESOUND_API_KEY;
+const FREESOUND_API_KEYS = [
+  process.env.REACT_APP_FREESOUND_API_KEY1,
+  process.env.REACT_APP_FREESOUND_API_KEY5,
+  process.env.REACT_APP_FREESOUND_API_KEY2,
+  process.env.REACT_APP_FREESOUND_API_KEY3,
+  process.env.REACT_APP_FREESOUND_API_KEY4,
+];
 const CLEVERBOT_API_KEY = process.env.REACT_APP_CLEVERBOT_API_KEY;
 const NEWS_API_KEY = process.env.REACT_APP_NEWS_API_KEY;
 const LANGUAGE_LAYER_API_KEY = process.env.REACT_APP_LANGUAGE_LAYER_API_KEY;
@@ -105,22 +111,25 @@ export const getYoutubeComments = videoId => {
   });
 };
 
+let count = 0;
 export const fetchFreesoundResults = (query, { min = 0, max = 200 } = {}) => {
   console.log('FETCHING SOUND', query);
   console.log('min:', min, 'max:', max);
   const url = 'https://freesound.org/apiv2/search/text/';
+  const key = FREESOUND_API_KEYS[count % FREESOUND_API_KEYS.length];
+  console.log('api key: ', key);
   const params = {
-    token: FREESOUND_API_KEY,
+    token: key,
     page_size: 50,
     query: query,
     fields: 'name,previews,username',
     filter: `duration:[${min} TO ${max}]`,
   };
-
+  count++;
   return fetchApi(url, params);
 };
 
-const excludeList = ['JohnLaVine333', 'SoundMaster391', 'Timbre'];
+const excludeList = ['JohnLaVine333', 'SoundMaster391', 'Timbre', '11linda'];
 
 export const getFreesounds = (query, minMax) => {
   return new Promise((resolve, reject) => {
@@ -153,12 +162,18 @@ export const getSoundUrl = async (query, minMax) => {
     console.log('get sounds error:', error);
   });
 
-  if (!freeSounds)
+  if (!freeSounds || freeSounds.length === 0)
     return {
-      // soundUrl: '',
-      // soundAuthor: '',
+      soundUrl: '',
+      soundAuthor: '',
     };
   const sound = getRandomIn(freeSounds);
+  if (!sound) {
+    return {
+      soundUrl: '',
+      soundAuthor: '',
+    };
+  }
   return {
     soundUrl: sound.previews['preview-lq-mp3'],
     soundAuthor: sound.username,

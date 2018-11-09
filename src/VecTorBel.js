@@ -112,6 +112,7 @@ class VecTorBel extends Component {
     const videoIds = this.state.videoIds.slice();
 
     videoIds[videoCount % 4] = videoId;
+    this.channel.postMessage({ videoId });
     this.setState({
       videoIds,
       latestVideoId: videoId,
@@ -126,14 +127,6 @@ class VecTorBel extends Component {
       videoCount: 0,
     });
   }
-
-  // setNewCredit({name, source, text}) {
-  //   const { credits } = this.state;
-  //   const newCredits = credits.slice();
-  //   newCredits.push({name, source, text});
-  //   this.setState({ credits: newCredits })
-  //   this.
-  // }
 
   getVoices() {
     if (typeof speechSynthesis === 'undefined') {
@@ -196,6 +189,7 @@ class VecTorBel extends Component {
   }
 
   async reset() {
+    console.clear();
     this.setState({
       showTreemap: true,
     });

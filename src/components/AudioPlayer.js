@@ -18,7 +18,7 @@ class AudioPlayer extends React.Component {
     this.volume = new Tone.Volume();
 
     const masterLimiter = new Tone.Limiter(-2);
-    this.reverb = new Tone.Freeverb();
+    this.reverb = new Tone.Freeverb(0.4);
     this.filter = new Tone.Filter();
     const masterOutput = new Tone.Gain(0.9).receive('masterOutput');
 
@@ -66,11 +66,11 @@ class AudioPlayer extends React.Component {
     }
 
     if (this.props.isSpeaking && !prevProps.isSpeaking) {
-      this.volume.volume.rampTo(-12, 1);
+      this.volume.volume.rampTo(-18, 0.5);
     }
 
     if (!this.props.isSpeaking && prevProps.isSpeaking) {
-      this.volume.volume.rampTo(0, 1);
+      this.volume.volume.rampTo(-2, 1);
     }
   }
 

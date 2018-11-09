@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import YoutubeVideo from './YoutubeVideo';
 
 // https://developers.google.com/youtube/player_parameters
-const options = {
+export const options = {
   height: '100%',
   width: '100%',
   playerVars: {

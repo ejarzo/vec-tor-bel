@@ -3,6 +3,7 @@
 */
 import React, { Component } from 'react';
 import Board from './Board';
+import { getColorForEmotion } from 'utils/color';
 
 function shuffle(a) {
   for (let i = a.length - 1; i > 0; i--) {
@@ -25,6 +26,7 @@ class QuantumTicTacToeBoard extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    console.log(this.props.replies);
     if (prevProps.replies.length !== this.props.replies.length) {
       if (this.board.gameOver()) {
         this.updateScores();
@@ -180,14 +182,27 @@ class QuantumTicTacToeBoard extends Component {
               type: Board.COLLAPSE,
               cells: i + 1,
             });
+
             let isWinning = false;
             this.board.tictactoes().forEach(tictactoe => {
               if (tictactoe.cells.indexOf(i + 1) > -1) {
                 isWinning = true;
               }
             });
+
+            const getColorForMove = index => {
+              const reply = this.props.replies[index];
+              if (reply.source === 'news') {
+                return '#2a4aea';
+              }
+              if (reply.source === 'comment') {
+                return '#FF0001';
+              }
+              return getColorForEmotion(reply.emotion);
+            };
             return (
               <div
+                key={`cell${i}`}
                 onClick={() => this.makeMove(i + 1)}
                 style={{
                   width: `${100 / 3}%`,
@@ -203,7 +218,13 @@ class QuantumTicTacToeBoard extends Component {
                 <span className={isWinning ? 'blink' : ''}>
                   {Array.isArray(cellOrCells) ? (
                     cellOrCells.map((cell, i) => (
-                      <span style={{ paddingLeft: i > 0 ? 5 : 0 }}>
+                      <span
+                        key={`move${i}`}
+                        style={{
+                          color: getColorForMove(cell - 1),
+                          paddingLeft: i > 0 ? 5 : 0,
+                        }}
+                      >
                         {cell % 2 === 0 ? 'O' : 'X'}
                         <sub style={{ opacity: 0.5 }}>
                           {Math.ceil(cell / 2)}
@@ -211,7 +232,13 @@ class QuantumTicTacToeBoard extends Component {
                       </span>
                     ))
                   ) : (
-                    <span style={{ fontSize: '3em' }}>
+                    <span
+                      style={{
+                        fontSize: '3em',
+                        color: getColorForMove(cellOrCells - 1),
+                        paddingLeft: i > 0 ? 5 : 0,
+                      }}
+                    >
                       {cellOrCells % 2 === 0 ? 'O' : 'X'}
                       <sub style={{ opacity: 0.5 }}>
                         {Math.ceil(cellOrCells / 2)}
@@ -223,16 +250,40 @@ class QuantumTicTacToeBoard extends Component {
             );
           })}
         </div>
-        <div style={{ padding: 20 }}>
-          {this.board.gameOver() && (
-            <div style={{ marginBottom: 20 }}>
-              <div>GAME OVER</div>
-              <div>Score: {this.stringifyScores()}</div>
-            </div>
-          )}
-          <div>Total Scores</div>
-          <div>X: {this.state.totalScoreX}</div>
-          <div>O: {this.state.totalScoreO}</div>
+        <div
+          style={{
+            position: 'relative',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              height: 400,
+              // transform: 'translateY(10px)',
+              zIndex: 3,
+              padding: 20,
+            }}
+          >
+            {this.board.gameOver() && (
+              <div style={{ marginBottom: 20 }}>
+                <span style={{ background: 'black' }}>GAME OVER</span>
+                <br />
+                <span style={{ background: 'black' }}>
+                  Score: {this.stringifyScores()}
+                </span>
+              </div>
+            )}
+            <span style={{ background: 'black' }}>Total Scores</span>
+            <br />
+            <span style={{ background: 'black' }}>
+              X: {this.state.totalScoreX}
+            </span>
+            <br />
+            <span style={{ background: 'black' }}>
+              O: {this.state.totalScoreO}
+            </span>
+            <br />
+          </div>
         </div>
       </div>
     );
