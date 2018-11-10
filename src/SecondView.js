@@ -123,7 +123,9 @@ class SecondView extends Component {
                       });
                     }
                   }}
-                  onReady={() => {}}
+                  onReady={e => {
+                    e.target.setVolume(0);
+                  }}
                   videoId={videoId}
                   opts={options}
                 />

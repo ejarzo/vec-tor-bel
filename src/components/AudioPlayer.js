@@ -17,10 +17,10 @@ class AudioPlayer extends React.Component {
 
     this.volume = new Tone.Volume();
 
-    const masterLimiter = new Tone.Limiter(-2);
+    const masterLimiter = new Tone.Limiter(-3);
     this.reverb = new Tone.Freeverb(0.4);
     this.filter = new Tone.Filter();
-    const masterOutput = new Tone.Gain(0.9).receive('masterOutput');
+    const masterOutput = new Tone.Gain(0.8).receive('masterOutput');
 
     masterOutput.chain(
       this.filter,

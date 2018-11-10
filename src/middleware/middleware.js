@@ -118,12 +118,17 @@ export const fetchFreesoundResults = (query, { min = 0, max = 200 } = {}) => {
   const url = 'https://freesound.org/apiv2/search/text/';
   const key = FREESOUND_API_KEYS[count % FREESOUND_API_KEYS.length];
   console.log('api key: ', key);
+  const rand = Math.random();
+  const sort =
+    rand < 0.2 ? 'rating_desc' : rand > 0.8 ? 'created_desc' : 'score';
+  console.log('SORT:', sort);
   const params = {
     token: key,
     page_size: 50,
     query: query,
     fields: 'name,previews,username',
     filter: `duration:[${min} TO ${max}]`,
+    sort,
   };
   count++;
   return fetchApi(url, params);

@@ -8,16 +8,8 @@ class NewsHeadline extends Component {
     };
   }
 
-  componentDidMount(prevProps) {
-    if (this.props.latestReply.source === 'news') {
-      this.setState({
-        isAnimating: true,
-      });
-    }
-  }
-
-  componentDidUpdate(prevProps) {
-    if (this.props.latestReply !== prevProps.latestReply) {
+  componentDidMount() {
+    setTimeout(() => {
       this.setState({
         isAnimating: true,
       });
@@ -26,13 +18,13 @@ class NewsHeadline extends Component {
           isAnimating: false,
         });
       }, 20000);
-    }
+    }, 200);
   }
 
   render() {
     const { latestReply } = this.props;
     const { isAnimating } = this.state;
-
+    console.log('news headline', latestReply, isAnimating);
     return (
       <div
         style={{

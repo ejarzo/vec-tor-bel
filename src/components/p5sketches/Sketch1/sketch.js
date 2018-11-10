@@ -47,9 +47,17 @@ export default function sketch(p) {
     const r = convertRange(emotionDegree, [0, 50], [0, width / 2]) || 0;
     const theta = convertRange(reactionDegree, [0, 50], [0, 360]) || 0;
     emotionColor = getColorForEmotion(emotion, true);
+
+    let y = (r * Math.sin(theta) + height / 2) * (height / width);
+    if (y >= height) {
+      y = height - Math.random() * 20;
+    }
+    if (y <= 0) {
+      y = Math.random() * 20;
+    }
     targetPoint = {
       x: r * Math.cos(theta) + width / 2,
-      y: ((r * Math.sin(theta) + height / 2) * height) / width,
+      y: y,
     };
 
     count = interactionCount;

@@ -46,8 +46,13 @@ class LatestReplyText extends Component {
     const r = convertRange(emotionDegree, [0, 50], [0, width / 2]) || 0;
     const theta = convertRange(reactionDegree, [0, 50], [0, 360]) || 0;
     const x = r * Math.cos(theta) + width / 2;
-    const y = ((r * Math.sin(theta) + height / 2) * height) / width;
-
+    let y = (r * Math.sin(theta) + height / 2) * (height / width);
+    if (y >= height) {
+      y = height - Math.random() * 20;
+    }
+    if (y <= 0) {
+      y = Math.random() * 20;
+    }
     return (
       <div
         style={{
@@ -55,6 +60,7 @@ class LatestReplyText extends Component {
           transform: `translate3d(${x}px,${y}px,0)`,
           transition: 'all 1s',
           background: 'white',
+          zIndex: 2,
           color: 'black',
           padding: 2,
           opacity: this.state.show ? 1 : 0,

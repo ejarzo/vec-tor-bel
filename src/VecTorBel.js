@@ -19,6 +19,8 @@ import {
   getLanguage,
 } from 'middleware/middleware.js';
 
+const MAX_COMMENT_TIME = 15000;
+
 const delay = time => new Promise(res => setTimeout(() => res(), time));
 
 const scale = (num, in_min, in_max, out_min, out_max) => {
@@ -248,6 +250,7 @@ class VecTorBel extends Component {
       this.setState({ showCommentOverlay: false, isSpeaking: false });
 
       const maxTimeUntilNextResponse = 15 * intensity;
+      // const maxTimeUntilNextResponse = 0;
 
       console.log('============ done speaking ===========');
       console.log('-- timeUntilNextReply', maxTimeUntilNextResponse);
@@ -262,10 +265,12 @@ class VecTorBel extends Component {
       }
     };
 
+    let isSpeaking = true;
     utterance.onend = onEnd;
     utterance.onerror = error => {
       console.log('speak error');
       console.log(error);
+      isSpeaking = false;
       onEnd();
     };
 
@@ -275,9 +280,15 @@ class VecTorBel extends Component {
     utterance.rate = scaleIntensity(inverseIntensity, 0.8, 1.3);
 
     utterance.voice = voice;
-    this.setState({ isSpeaking: true });
 
+    this.setState({ isSpeaking: true });
+    await delay(900);
     synth.speak(utterance);
+
+    await delay(MAX_COMMENT_TIME);
+    if (isSpeaking) {
+      synth.cancel();
+    }
   }
 
   async getNextReply() {
@@ -287,6 +298,18 @@ class VecTorBel extends Component {
       latestVideoId,
       responsesBetweenYoutubeComments,
     } = this.state;
+
+    const blurCount = 14;
+    if (count > 0 && count % blurCount === 0) {
+      this.setState({
+        youtubeBlurAmount1: Math.random() * 40 + 20,
+      });
+    }
+    if (count % (blurCount + 2) === 0) {
+      this.setState({
+        youtubeBlurAmount1: 0,
+      });
+    }
 
     const prevReply = replies[replies.length - 1];
     const nextReplies = replies.slice();
@@ -326,6 +349,7 @@ class VecTorBel extends Component {
       ]);
 
       this.setState({ isSpeaking: true });
+      // await delay(700);
       const alertSound = new Howl({
         src: [alertSoundUrl],
         onend: () => {
@@ -455,7 +479,14 @@ class VecTorBel extends Component {
     const inverseIntensity = intensity * -1 + 2;
     console.log('RENDER INVERSET INTENSITY', inverseIntensity);
     return (
-      <div className="App" style={{ paddingBottom: 100 }}>
+      <div
+        className="App"
+        style={{
+          paddingBottom: 100,
+          // height: '95%',
+          // transform: 'scale(0.91)',
+        }}
+      >
         {showVideo && (
           <div className="VideoContainer">
             <YoutubePlayer
@@ -489,7 +520,7 @@ class VecTorBel extends Component {
           }}
         />*/}
 
-        <div className="SketchContainer">
+        {/*<div className="SketchContainer">
           {latestReply &&
             showGraph && (
               <Sketch1
@@ -498,7 +529,7 @@ class VecTorBel extends Component {
                 count={this.state.count}
               />
             )}
-        </div>
+        </div>*/}
 
         {latestReply && (
           <div
@@ -515,9 +546,8 @@ class VecTorBel extends Component {
               fontSize: '8em',
             }}
           >
-            <ReactHeight onHeightReady={height => this.setState()}>
-              <div>
-                {/* TODO: this is a long comment this is a long comment this is a long
+            <div>
+              {/* TODO: this is a long comment this is a long comment this is a long
                   comment this is a long comment this is a long comment this is a
                   long comment this is a long comment this is a long comment this
                   is a long comment this is a long comment this is a long comment
@@ -526,9 +556,8 @@ class VecTorBel extends Component {
                   long comment this is a long comment this is a long comment this
                   is a long comment this is a long comment this is a long comment
                   this is a long comment this is a long comment*/}
-                {latestReply.text}
-              </div>
-            </ReactHeight>
+              {latestReply.text}
+            </div>
           </div>
         )}
 
@@ -601,7 +630,10 @@ class VecTorBel extends Component {
           </button>
         </div>
 
-        {latestReply && <NewsHeadline latestReply={latestReply} />}
+        {latestReply &&
+          latestReply.source === 'news' && (
+            <NewsHeadline latestReply={latestReply} />
+          )}
 
         <AudioPlayer
           src={soundUrl}

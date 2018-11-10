@@ -27,7 +27,13 @@ class QuantumTicTacToeBoard extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     console.log(this.props.replies);
-    if (prevProps.replies.length !== this.props.replies.length) {
+    if (this.props.replies.length === 0) {
+      this.board.clear();
+    }
+    if (
+      this.props.replies.length &&
+      prevProps.replies.length !== this.props.replies.length
+    ) {
       if (this.board.gameOver()) {
         this.updateScores();
         this.board.clear();
@@ -192,6 +198,9 @@ class QuantumTicTacToeBoard extends Component {
 
             const getColorForMove = index => {
               const reply = this.props.replies[index];
+              if (!reply) {
+                return 'white';
+              }
               if (reply.source === 'news') {
                 return '#2a4aea';
               }
@@ -215,37 +224,39 @@ class QuantumTicTacToeBoard extends Component {
                   // color: isWinning ? '#F00' : 'white',
                 }}
               >
-                <span className={isWinning ? 'blink' : ''}>
-                  {Array.isArray(cellOrCells) ? (
-                    cellOrCells.map((cell, i) => (
+                {this.props.replies.length > 0 && (
+                  <span className={isWinning ? 'blink' : ''}>
+                    {Array.isArray(cellOrCells) ? (
+                      cellOrCells.map((cell, i) => (
+                        <span
+                          key={`move${i}`}
+                          style={{
+                            color: getColorForMove(cell - 1),
+                            paddingLeft: i > 0 ? 5 : 0,
+                          }}
+                        >
+                          {cell % 2 === 0 ? 'O' : 'X'}
+                          <sub style={{ opacity: 0.5 }}>
+                            {Math.ceil(cell / 2)}
+                          </sub>
+                        </span>
+                      ))
+                    ) : (
                       <span
-                        key={`move${i}`}
                         style={{
-                          color: getColorForMove(cell - 1),
+                          fontSize: '3em',
+                          color: getColorForMove(cellOrCells - 1),
                           paddingLeft: i > 0 ? 5 : 0,
                         }}
                       >
-                        {cell % 2 === 0 ? 'O' : 'X'}
+                        {cellOrCells % 2 === 0 ? 'O' : 'X'}
                         <sub style={{ opacity: 0.5 }}>
-                          {Math.ceil(cell / 2)}
+                          {Math.ceil(cellOrCells / 2)}
                         </sub>
                       </span>
-                    ))
-                  ) : (
-                    <span
-                      style={{
-                        fontSize: '3em',
-                        color: getColorForMove(cellOrCells - 1),
-                        paddingLeft: i > 0 ? 5 : 0,
-                      }}
-                    >
-                      {cellOrCells % 2 === 0 ? 'O' : 'X'}
-                      <sub style={{ opacity: 0.5 }}>
-                        {Math.ceil(cellOrCells / 2)}
-                      </sub>
-                    </span>
-                  )}
-                </span>
+                    )}
+                  </span>
+                )}
               </div>
             );
           })}
