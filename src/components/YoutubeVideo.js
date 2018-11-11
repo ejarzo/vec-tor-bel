@@ -14,17 +14,22 @@ class YoutubeVideo extends Component {
   }
 
   handleReady(e) {
-    // const player = e.target;
-    // player.setPlaybackRate(2)
     this.player = e.target;
     this.player.setVolume(0);
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.volume !== this.props.volume) {
-      console.log('updating volume');
-      console.log(prevProps.volume, this.props.volume);
+    if (this.props.isSpeaking && !prevProps.isSpeaking) {
+      // console.log('DUCKING VIDEO');
+      this.player && this.player.setVolume(this.props.volume / 2);
+    } else if (!this.props.isSpeaking && prevProps.isSpeaking) {
       this.player && this.player.setVolume(this.props.volume);
+    } else if (prevProps.volume !== this.props.volume) {
+      // console.log('updating volume');
+      // console.log(prevProps.volume, this.props.volume);
+      setTimeout(() => {
+        this.player && this.player.setVolume(this.props.volume);
+      }, Math.random() * 4000);
     }
   }
 

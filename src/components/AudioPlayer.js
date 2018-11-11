@@ -40,7 +40,7 @@ class AudioPlayer extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    console.log(prevProps, this.props);
+    // console.log(prevProps, this.props);
     const { src, count } = this.props;
     if (this.props.src && prevProps.src !== src) {
       const player = this.players[count % 10];
@@ -59,8 +59,8 @@ class AudioPlayer extends React.Component {
       if (roomSize < 0) {
         roomSize = 0;
       }
-      console.log(roomSize);
-      console.log(this.props.intensity, freq);
+      // console.log(roomSize);
+      // console.log(this.props.intensity, freq);
       this.filter.frequency.rampTo(freq, 5);
       this.reverb.roomSize.rampTo(roomSize, 5);
     }

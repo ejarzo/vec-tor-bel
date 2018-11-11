@@ -39,7 +39,7 @@ export const getYoutubeVideos = query => {
   return new Promise((resolve, reject) => {
     fetchYoutubeResults(query).then(
       data => {
-        console.log(data);
+        // console.log(data);
         const { items } = data;
         if (items.length > 0) {
           resolve(items);
@@ -55,6 +55,8 @@ export const getYoutubeVideos = query => {
 };
 
 export const getYoutubeVideo = async query => {
+  console.log('FETCHING VIDEOS');
+
   const videos = await getYoutubeVideos(query).catch(error => {
     console.log('error getting videos');
     console.log(error);
@@ -63,7 +65,7 @@ export const getYoutubeVideo = async query => {
 
   if (videos.length > 0) {
     const randomVideo = getRandomIn(videos);
-    console.log('RANDOM VIDEO:', randomVideo);
+    // console.log('RANDOM VIDEO:', randomVideo);
     return {
       videoId: randomVideo.id.videoId,
       videoAuthor: randomVideo.snippet.channelTitle,
@@ -113,15 +115,13 @@ export const getYoutubeComments = videoId => {
 
 let count = 0;
 export const fetchFreesoundResults = (query, { min = 0, max = 200 } = {}) => {
-  console.log('FETCHING SOUND', query);
-  console.log('min:', min, 'max:', max);
+  console.log('FETCHING SOUNDS');
+
   const url = 'https://freesound.org/apiv2/search/text/';
   const key = FREESOUND_API_KEYS[count % FREESOUND_API_KEYS.length];
-  console.log('api key: ', key);
   const rand = Math.random();
   const sort =
     rand < 0.2 ? 'rating_desc' : rand > 0.8 ? 'created_desc' : 'score';
-  console.log('SORT:', sort);
   const params = {
     token: key,
     page_size: 50,
@@ -131,6 +131,7 @@ export const fetchFreesoundResults = (query, { min = 0, max = 200 } = {}) => {
     sort,
   };
   count++;
+
   return fetchApi(url, params);
 };
 
@@ -141,7 +142,7 @@ export const getFreesounds = (query, minMax) => {
     fetchFreesoundResults(query, minMax).then(
       ({ results }) => {
         if (results && results.length > 0) {
-          console.log('SOUND RESULTS', results);
+          // console.log('SOUND RESULTS', results);
           resolve(
             results.filter(
               ({ name, username }) =>
@@ -162,9 +163,9 @@ export const getFreesounds = (query, minMax) => {
 };
 
 export const getSoundUrl = async (query, minMax) => {
-  console.log('getsoundurl', query, minMax);
+  // console.log('getsoundurl', query, minMax);
   const freeSounds = await getFreesounds(query, minMax).catch(error => {
-    console.log('get sounds error:', error);
+    // console.log('get sounds error:', error);
   });
 
   if (!freeSounds || freeSounds.length === 0)

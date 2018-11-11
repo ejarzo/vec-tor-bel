@@ -24,7 +24,6 @@ class NewsHeadline extends Component {
   render() {
     const { latestReply } = this.props;
     const { isAnimating } = this.state;
-    console.log('news headline', latestReply, isAnimating);
     return (
       <div
         style={{

@@ -22,7 +22,7 @@ const getEmotionCategoryForEmotion = emotion => {
     }
   }
 
-  console.log('emotion not found:', emotion);
+  // console.log('emotion not found:', emotion);
   return '';
 };
 

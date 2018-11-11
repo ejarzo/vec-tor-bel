@@ -15,5 +15,5 @@ export const getVoice = async () => {
   ) {
     speechSynthesis.onvoiceschanged = populateVoiceList;
   }
-  console.log(voices);
+  // console.log(voices);
 };

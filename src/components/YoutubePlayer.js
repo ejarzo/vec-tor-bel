@@ -41,7 +41,7 @@ class YoutubePlayer extends Component {
   }
 
   render() {
-    const { videoIds, volume, blurAmount1 } = this.props;
+    const { videoIds, volume, blurAmount1, isSpeaking } = this.props;
     return (
       <div>
         {videoIds.map(
@@ -54,6 +54,7 @@ class YoutubePlayer extends Component {
                 options={options}
                 volume={volume * 0.9}
                 isTop={i !== 0}
+                isSpeaking={isSpeaking}
               />
             )
         )}

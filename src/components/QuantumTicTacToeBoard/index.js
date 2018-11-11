@@ -26,7 +26,7 @@ class QuantumTicTacToeBoard extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    console.log(this.props.replies);
+    // console.log(this.props.replies);
     if (this.props.replies.length === 0) {
       this.board.clear();
     }

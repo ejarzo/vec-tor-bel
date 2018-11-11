@@ -1,6 +1,6 @@
 export const getRandomIn = array => {
   const randomIndex = Math.floor(Math.random() * array.length);
-  console.log('results random index', randomIndex);
+  // console.log('results random index', randomIndex);
   return array[randomIndex];
 };
 
