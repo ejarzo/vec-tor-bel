@@ -8,7 +8,6 @@ import LatestReplyText from 'components/LatestReplyText';
 import ConversationSummaryGraph from 'components/ConversationSummaryGraph';
 import { getColorForEmotion, getEmotionCategoryForEmotion } from 'utils/color';
 import { Howl } from 'howler';
-import { ReactHeight } from 'react-height';
 
 import {
   getYoutubeComments,
@@ -585,8 +584,8 @@ class VecTorBel extends Component {
 
         <div className="controls" style={{ zIndex: 20 }}>
           <button onClick={this.begin}>BEGIN</button>
-          <button onClick={this.reset}>RESET</button>
-          <button onClick={this.getNextReply}>GO</button>
+          {/*<button onClick={this.reset}>RESET</button>*/}
+          {/*<button onClick={this.getNextReply}>GO</button>*/}
           {/* <button
             onClick={() =>
               this.setState({ showTreemap: !this.state.showTreemap })
@@ -603,13 +602,13 @@ class VecTorBel extends Component {
           >
             toggle comment overlay
           </button>*/}
-          <button
+          {/*<button
             onClick={() =>
               this.setState({ runIndefinitely: !this.state.runIndefinitely })
             }
           >
             Toggle infinite
-          </button>
+          </button>*/}
           {/*<button
             onClick={() => {
               this.setState({
@@ -652,10 +651,9 @@ class VecTorBel extends Component {
           </button>*/}
         </div>
 
-        {latestReply &&
-          latestReply.source === 'news' && (
-            <NewsHeadline latestReply={latestReply} />
-          )}
+        {latestReply && latestReply.source === 'news' && (
+          <NewsHeadline latestReply={latestReply} />
+        )}
 
         <AudioPlayer
           src={soundUrl}
