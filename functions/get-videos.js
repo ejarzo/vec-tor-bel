@@ -1,8 +1,7 @@
 const { YOUTUBE_API_KEY } = process.env;
-const { fetchApi } = require('./utils');
+const { fetchApi, URLS } = require('./utils');
 
 const fetchYoutubeResults = query => {
-  const url = 'https://www.googleapis.com/youtube/v3/search/';
   const params = {
     key: YOUTUBE_API_KEY,
     q: query,
@@ -11,14 +10,21 @@ const fetchYoutubeResults = query => {
     maxResults: 15,
   };
 
-  return fetchApi(url, params);
+  return fetchApi(URLS.YOUTUBE_VIDEOS, params);
 };
 
 exports.handler = async (event, context) => {
   console.log('get-videos called');
-  const { query } = event.queryStringParameters || {};
-  const youtubeResults = await fetchYoutubeResults(query);
+  const { user } = context.clientContext;
+  if (!user) {
+    return {
+      statusCode: 403,
+    };
+  }
+
   try {
+    const { query } = event.queryStringParameters || {};
+    const youtubeResults = await fetchYoutubeResults(query);
     console.log('success', youtubeResults);
     return {
       statusCode: 200,

@@ -1,18 +1,24 @@
+const { fetchApi, URLS } = require('./utils');
 const { NEWS_API_KEY } = process.env;
-const { fetchApi } = require('./utils');
 
 const getNews = () => {
-  const url = 'https://newsapi.org/v2/top-headlines/';
   const params = {
     country: 'us',
     apiKey: NEWS_API_KEY,
   };
 
-  return fetchApi(url, params);
+  return fetchApi(URLS.NEWS, params);
 };
 
 exports.handler = async (event, context) => {
   console.log('get-news called');
+  const { user } = context.clientContext;
+  if (!user) {
+    return {
+      statusCode: 403,
+    };
+  }
+
   try {
     const results = await getNews();
     return {

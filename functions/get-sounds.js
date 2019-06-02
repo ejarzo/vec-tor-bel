@@ -1,8 +1,7 @@
 const { FREESOUND_API_KEY } = process.env;
-const { fetchApi } = require('./utils');
+const { fetchApi, URLS } = require('./utils');
 
 const fetchFreesoundResults = (query, { min = 0, max = 200 } = {}) => {
-  const url = 'https://freesound.org/apiv2/search/text/';
   const rand = Math.random();
   const sort =
     rand < 0.2 ? 'rating_desc' : rand > 0.8 ? 'created_desc' : 'score';
@@ -15,11 +14,17 @@ const fetchFreesoundResults = (query, { min = 0, max = 200 } = {}) => {
     sort,
   };
 
-  return fetchApi(url, params);
+  return fetchApi(URLS.FREESOUNDS, params);
 };
 
 exports.handler = async (event, context) => {
   console.log('get-sounds called');
+  const { user } = context.clientContext;
+  if (!user) {
+    return {
+      statusCode: 403,
+    };
+  }
 
   try {
     const { query, min, max } = event.queryStringParameters || {};

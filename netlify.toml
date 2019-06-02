@@ -3,6 +3,7 @@
   port = 3000
   publish = "dist"
   functions= "functions"
+
 [build]
   command = "yarn build"
   publish = "build/"
