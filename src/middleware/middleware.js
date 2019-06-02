@@ -1,4 +1,5 @@
 import { getRandomIn } from 'utils/data';
+import { fetchYoutubeResults } from './middleware-netlify';
 
 const YOUTUBE_API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
 const FREESOUND_API_KEY = process.env.REACT_APP_FREESOUND_API_KEY;
@@ -16,18 +17,18 @@ const fetchApi = async (url, params) => {
   return response.json();
 };
 
-const fetchYoutubeResults = query => {
-  const url = 'https://www.googleapis.com/youtube/v3/search/';
-  const params = {
-    key: YOUTUBE_API_KEY,
-    q: query,
-    part: 'snippet',
-    type: 'video',
-    maxResults: 15,
-  };
+// const fetchYoutubeResults = query => {
+//   const url = 'get-sounds';
+//   const params = {
+//     // key: YOUTUBE_API_KEY,
+//     // q: query,
+//     // part: 'snippet',
+//     // type: 'video',
+//     // maxResults: 15,
+//   };
 
-  return fetchApi(url, params);
-};
+//   return fetchApi(url, params);
+// };
 
 export const getYoutubeVideos = query => {
   return new Promise((resolve, reject) => {
@@ -42,6 +43,7 @@ export const getYoutubeVideos = query => {
         }
       },
       error => {
+        console.log(error);
         reject(error);
       }
     );
@@ -107,7 +109,6 @@ export const getYoutubeComments = videoId => {
   });
 };
 
-let count = 0;
 export const fetchFreesoundResults = (query, { min = 0, max = 200 } = {}) => {
   console.log('FETCHING SOUNDS');
 
@@ -124,7 +125,6 @@ export const fetchFreesoundResults = (query, { min = 0, max = 200 } = {}) => {
     filter: `duration:[${min} TO ${max}]`,
     sort,
   };
-  count++;
 
   return fetchApi(url, params);
 };

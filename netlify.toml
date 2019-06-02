@@ -1,0 +1,10 @@
+[dev]
+  command = "yarn start"
+  port = 3000
+  publish = "dist"
+  functions = "functions"
+
+[build]
+  command = "yarn build"
+  publish = "build/"
+  functions = 'build/functions'
