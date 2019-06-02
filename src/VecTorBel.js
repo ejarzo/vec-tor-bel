@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import Sketch1 from 'components/p5sketches/Sketch1';
 import RovingEye from 'components/RovingEye';
 import NewsHeadline from 'components/NewsHeadline';
 import YoutubePlayer from 'components/YoutubePlayer';
@@ -16,7 +15,7 @@ import {
   getNews,
   getYoutubeVideo,
   getLanguage,
-} from 'middleware/middleware.js';
+} from 'middleware/middleware';
 
 const MAX_COMMENT_TIME = 15000;
 
@@ -499,7 +498,6 @@ class VecTorBel extends Component {
     const {
       showEye,
       showVideo,
-      showGraph,
       showTreemap,
       videoIds,
       replies,

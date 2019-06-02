@@ -5,7 +5,11 @@ const browserFetch = window.fetch;
 
 export const getEndpoint = path => `${ENDPOINT}/${path}`;
 
-export const fetch = async (endpoint, options = {}) => {
+export const fetch = async (endpoint, params = {}, options = {}) => {
+  const esc = encodeURIComponent;
+  const query = Object.keys(params)
+    .map(k => esc(k) + '=' + esc(params[k]))
+    .join('&');
   const currentUser = getCurrentUser();
   const fetchOptions = currentUser
     ? {
@@ -17,5 +21,5 @@ export const fetch = async (endpoint, options = {}) => {
       }
     : options;
 
-  return browserFetch(getEndpoint(endpoint), fetchOptions);
+  return browserFetch(getEndpoint(`${endpoint}?${query}`), fetchOptions);
 };
