@@ -1,13 +1,7 @@
 import { getRandomIn } from 'utils/data';
 
 const YOUTUBE_API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
-const FREESOUND_API_KEYS = [
-  process.env.REACT_APP_FREESOUND_API_KEY1,
-  process.env.REACT_APP_FREESOUND_API_KEY5,
-  process.env.REACT_APP_FREESOUND_API_KEY2,
-  process.env.REACT_APP_FREESOUND_API_KEY3,
-  process.env.REACT_APP_FREESOUND_API_KEY4,
-];
+const FREESOUND_API_KEY = process.env.REACT_APP_FREESOUND_API_KEY;
 const CLEVERBOT_API_KEY = process.env.REACT_APP_CLEVERBOT_API_KEY;
 const NEWS_API_KEY = process.env.REACT_APP_NEWS_API_KEY;
 const LANGUAGE_LAYER_API_KEY = process.env.REACT_APP_LANGUAGE_LAYER_API_KEY;
@@ -41,7 +35,7 @@ export const getYoutubeVideos = query => {
       data => {
         // console.log(data);
         const { items } = data;
-        if (items.length > 0) {
+        if (items && items.length > 0) {
           resolve(items);
         } else {
           reject('No Videos');
@@ -118,7 +112,7 @@ export const fetchFreesoundResults = (query, { min = 0, max = 200 } = {}) => {
   console.log('FETCHING SOUNDS');
 
   const url = 'https://freesound.org/apiv2/search/text/';
-  const key = FREESOUND_API_KEYS[count % FREESOUND_API_KEYS.length];
+  const key = FREESOUND_API_KEY;
   const rand = Math.random();
   const sort =
     rand < 0.2 ? 'rating_desc' : rand > 0.8 ? 'created_desc' : 'score';
