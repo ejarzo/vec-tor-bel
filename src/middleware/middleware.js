@@ -8,7 +8,7 @@ import {
 } from './middleware-netlify';
 
 export const getYoutubeVideos = async query => {
-  const { items } = await fetchYoutubeResults;
+  const { items } = await fetchYoutubeResults(query);
   if (items && items.length > 0) {
     return items;
   } else {

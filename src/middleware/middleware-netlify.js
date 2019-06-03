@@ -2,8 +2,9 @@ import { fetch } from './utils';
 
 export const fetchYoutubeResults = async query => {
   const url = 'get-videos';
-  const params = { q: query };
+  const params = { query };
   const response = await fetch(url, params);
+  
   const jsonResult = await response.json();
   return jsonResult;
 };
