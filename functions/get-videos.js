@@ -14,7 +14,7 @@ const fetchYoutubeResults = query => {
 };
 
 exports.handler = async (event, context) => {
-  console.log('get-videos called');
+  console.log('================= get-videos called =================');
   const { user } = context.clientContext;
   if (!user) {
     return {
@@ -25,7 +25,7 @@ exports.handler = async (event, context) => {
   try {
     const { query } = event.queryStringParameters || {};
     const youtubeResults = await fetchYoutubeResults(query);
-    console.log('success', youtubeResults);
+    console.log('get-videos success');
     return {
       statusCode: 200,
       body: JSON.stringify(youtubeResults),

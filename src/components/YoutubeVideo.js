@@ -63,7 +63,7 @@ class YoutubeVideo extends Component {
         style={{
           position: 'absolute',
           top: 0,
-          width: '100vw',
+          width: '100%',
           mixBlendMode: isTop && this.state.blendMode,
           transition: 'filter 1s',
           opacity: isVisible ? 1 : 0,

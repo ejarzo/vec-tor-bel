@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import { withContentRect } from 'react-measure';
+
 import { Treemap } from 'react-vis';
 import { emotionLists } from 'utils/emotions';
 import {
@@ -124,7 +126,7 @@ class ConversationSumaryGraph extends Component {
 
   render() {
     const { data, isEnabled, isVisible, width, height } = this.state;
-
+    // const { measureRef, measure, contentRect } = this.props;
     if (!width || !isEnabled) {
       return null;
     }
@@ -163,4 +165,4 @@ class ConversationSumaryGraph extends Component {
   }
 }
 
-export default ConversationSumaryGraph;
+export default withContentRect('bounds')(ConversationSumaryGraph);

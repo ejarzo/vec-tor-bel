@@ -6,8 +6,6 @@
 */
 
 var Board = (function() {
-  'use strict';
-
   /* Make a shallow copy of an array. */
   function arrayCopy(source) {
     var i,

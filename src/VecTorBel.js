@@ -1,12 +1,21 @@
 import React, { Component } from 'react';
+import { Howl } from 'howler';
+
+import { delay } from 'utils/time';
+import { scaleIntensity } from 'utils/data';
+import { getColorForEmotion, getEmotionCategoryForEmotion } from 'utils/color';
+
 import RovingEye from 'components/RovingEye';
 import NewsHeadline from 'components/NewsHeadline';
 import YoutubePlayer from 'components/YoutubePlayer';
 import AudioPlayer from 'components/AudioPlayer';
+import Credits from 'components/Credits';
+import ChatLog from 'components/ChatLog';
 import LatestReplyText from 'components/LatestReplyText';
 import ConversationSummaryGraph from 'components/ConversationSummaryGraph';
-import { getColorForEmotion, getEmotionCategoryForEmotion } from 'utils/color';
-import { Howl } from 'howler';
+import Sketch1 from 'components/p5sketches/Sketch1';
+
+import SecondView from './SecondView';
 
 import {
   getYoutubeComments,
@@ -19,15 +28,6 @@ import {
 
 const MAX_COMMENT_TIME = 15000;
 
-const delay = time => new Promise(res => setTimeout(() => res(), time));
-
-const scale = (num, in_min, in_max, out_min, out_max) => {
-  return ((num - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min;
-};
-
-export const scaleIntensity = (num, outMin, outMax) =>
-  scale(num, 0, 2, outMin, outMax);
-
 class VecTorBel extends Component {
   constructor(props) {
     super(props);
@@ -35,7 +35,7 @@ class VecTorBel extends Component {
       runIndefinitely: true,
 
       showEye: false,
-      showGraph: true,
+      showGraph: false,
       showVideo: true,
       showTreemap: false,
 
@@ -259,7 +259,7 @@ class VecTorBel extends Component {
       // synth.cancel();
       this.setState({ showCommentOverlay: false, isSpeaking: false });
 
-      let maxTimeUntilNextResponse = 15 * intensity;
+      let maxTimeUntilNextResponse = 1 * intensity;
       if (intensity < 0.5) {
         maxTimeUntilNextResponse = maxTimeUntilNextResponse / 2;
       }
@@ -349,10 +349,11 @@ class VecTorBel extends Component {
     }
 
     const shouldGetVideoComments =
-      replies.length === 2 ||
-      replies.length % responsesBetweenYoutubeComments === 0;
-
+      replies.length > 0 &&
+      (replies.length === 2 ||
+        replies.length % responsesBetweenYoutubeComments === 0);
     if (shouldGetVideoComments) {
+      console.log('GETTING YOUTUBE COMMENTS');
       videoComments = await getYoutubeComments(latestVideoId).catch(error => {
         return null;
       });
@@ -499,6 +500,7 @@ class VecTorBel extends Component {
       showEye,
       showVideo,
       showTreemap,
+      showGraph,
       videoIds,
       replies,
       lastCBResponse,
@@ -524,74 +526,76 @@ class VecTorBel extends Component {
     return (
       <div
         className="App"
-        style={{
-          paddingBottom: 100,
-        }}
+        // style={{
+        //   paddingBottom: 100,
+        // }}
       >
-        {showVideo && (
-          <div className="VideoContainer">
-            <YoutubePlayer
-              getNextReply={this.getNextReply}
-              count={n}
-              blurAmount1={youtubeBlurAmount1}
-              // blurAmount2={youtubeBlurAmount2}
-              videoIds={videoIds}
-              volume={inverseIntensity > 1.5 ? (isSpeaking ? 50 : 100) : 0}
+        <div className="PrimaryViewContainer">
+          {showVideo && (
+            <div className="VideoContainer">
+              <YoutubePlayer
+                getNextReply={this.getNextReply}
+                count={n}
+                blurAmount1={youtubeBlurAmount1}
+                // blurAmount2={youtubeBlurAmount2}
+                videoIds={videoIds}
+                volume={inverseIntensity > 1.5 ? (isSpeaking ? 50 : 100) : 0}
+              />
+            </div>
+          )}
+
+          {showEye && <RovingEye />}
+
+          {latestReply && (
+            <LatestReplyText
+              latestReply={latestReply}
+              lastCBResponse={lastCBResponse}
             />
-          </div>
-        )}
+          )}
 
-        {showEye && <RovingEye />}
-
-        {latestReply && (
-          <LatestReplyText
-            latestReply={latestReply}
-            lastCBResponse={lastCBResponse}
-          />
-        )}
-
-        {/*<div className="SketchContainer">
-          {latestReply &&
-            showGraph && (
+          <div className="SketchContainer">
+            {latestReply && showGraph && (
               <Sketch1
                 newReply={latestReply}
                 newData={lastCBResponse}
                 count={this.state.count}
               />
             )}
-        </div>*/}
-
-        {latestReply && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              transition: 'all 0.3s',
-              transform: `translate3d(${showCommentOverlay ? 0 : 100}vw, 0, 0)`,
-              mixBlendMode: 'screen',
-              padding: 30,
-              fontFamily: 'Roboto',
-              color: '#222',
-              background: 'white',
-              fontSize: '8em',
-            }}
-          >
-            <div>{latestReply.text}</div>
           </div>
-        )}
 
-        <div className="controls" style={{ zIndex: 20 }}>
-          <button onClick={this.begin}>BEGIN</button>
-          {/*<button onClick={this.reset}>RESET</button>*/}
-          {/*<button onClick={this.getNextReply}>GO</button>*/}
-          {/* <button
-            onClick={() =>
-              this.setState({ showTreemap: !this.state.showTreemap })
-            }
-          >
-            Toggle treemap
-          </button>*/}
-          {/*<button
+          {latestReply && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                transition: 'all 0.3s',
+                transform: `translate3d(${
+                  showCommentOverlay ? 0 : 100
+                }vw, 0, 0)`,
+                mixBlendMode: 'screen',
+                padding: 30,
+                fontFamily: 'Roboto',
+                color: '#222',
+                background: 'white',
+                fontSize: '8em',
+              }}
+            >
+              <div>{latestReply.text}</div>
+            </div>
+          )}
+
+          <div className="controls" style={{ zIndex: 20 }}>
+            <button onClick={this.begin}>BEGIN</button>
+            <button onClick={this.reset}>RESET</button>
+            <button onClick={this.getNextReply}>GO</button>
+            <button
+              onClick={() =>
+                this.setState({ showTreemap: !this.state.showTreemap })
+              }
+            >
+              Toggle treemap
+            </button>
+            {/*<button
             onClick={() =>
               this.setState({
                 showCommentOverlay: !this.state.showCommentOverlay,
@@ -600,14 +604,14 @@ class VecTorBel extends Component {
           >
             toggle comment overlay
           </button>*/}
-          {/*<button
+            {/*<button
             onClick={() =>
               this.setState({ runIndefinitely: !this.state.runIndefinitely })
             }
           >
             Toggle infinite
           </button>*/}
-          {/*<button
+            {/*<button
             onClick={() => {
               this.setState({
                 youtubeBlurAmount1: 0,
@@ -617,7 +621,7 @@ class VecTorBel extends Component {
           >
             CLEAR BLUR
           </button>*/}
-          {/*<button
+            {/*<button
             onClick={() => {
               this.setState({
                 youtubeBlurAmount1: Math.random() * 50,
@@ -647,26 +651,52 @@ class VecTorBel extends Component {
           >
             RANDOM COLOR
           </button>*/}
-        </div>
-
-        {latestReply && latestReply.source === 'news' && (
-          <NewsHeadline latestReply={latestReply} />
-        )}
-
-        <AudioPlayer
-          src={soundUrl}
-          intensity={inverseIntensity}
-          isSpeaking={isSpeaking}
-          count={count}
-        />
-        {latestReply && (
-          <div style={{ position: 'absolute', zIndex: 1 }}>
-            <ConversationSummaryGraph
-              enabled={showTreemap}
-              currEmotion={latestReply.emotion}
-            />
           </div>
-        )}
+
+          {latestReply && latestReply.source === 'news' && (
+            <NewsHeadline latestReply={latestReply} />
+          )}
+
+          <AudioPlayer
+            src={soundUrl}
+            intensity={inverseIntensity}
+            isSpeaking={isSpeaking}
+            count={count}
+          />
+          {latestReply && (
+            <div style={{ position: 'absolute', zIndex: 1 }}>
+              <ConversationSummaryGraph
+                enabled={showTreemap}
+                currEmotion={latestReply.emotion}
+              />
+            </div>
+          )}
+        </div>
+        <div className="SecondViewContainer">
+          <SecondView />
+        </div>
+        <div className="ThirdViewContainer">
+          <div
+            style={{
+              borderBottom: '1px solid white',
+              gridColumn: '1/3',
+              gridRow: '1/2',
+              padding: 5,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              fontSize: '1.2em',
+            }}
+          >
+            {latestReply && latestReply.text}
+          </div>
+          <div style={{ borderRight: '1px solid white' }}>
+            <Credits />
+          </div>
+          <div style={{ borderLeft: '1px solid white' }}>
+            <ChatLog intensity={intensity} />
+          </div>
+        </div>
       </div>
     );
   }
