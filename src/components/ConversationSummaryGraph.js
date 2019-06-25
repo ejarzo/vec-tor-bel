@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { withContentRect } from 'react-measure';
+import Measure from 'react-measure';
 
 import { Treemap } from 'react-vis';
 import { emotionLists } from 'utils/emotions';
@@ -132,35 +133,42 @@ class ConversationSumaryGraph extends Component {
     }
 
     return (
-      <div
-        style={{
-          transition: 'all 15s',
-          filter: isVisible ? 'none' : 'blur(200px)',
-          opacity: isVisible ? '1' : '0',
-          // mixBlendMode: 'overlay',
-        }}
-      >
-        <Treemap
-          {...{
-            // animation: false,
-            colorType: 'literal',
-            colorRange: ['#88572C'],
-            data,
-            mode: 'squarify',
-            renderMode: 'SVG',
-            height: this.props.height || height,
-            width: this.props.width || width,
-            margin: 0,
-            getSize: d => d.size,
-            getColor: d => d.color,
-            style: {
-              stroke: '#000',
-              strokeWidth: '0.5',
-              strokeOpacity: '0.25',
-            },
-          }}
-        />
-      </div>
+      <Measure>
+        {({ measureRef, ...rest }) => (
+          <div ref={measureRef} style={{ height: '100%', width: '100%' }}>
+            <div
+              asd={console.log(rest)}
+              style={{
+                transition: 'all 15s',
+                filter: isVisible ? 'none' : 'blur(200px)',
+                opacity: isVisible ? '1' : '0',
+                // mixBlendMode: 'overlay',
+              }}
+            >
+              <Treemap
+                {...{
+                  // animation: false,
+                  colorType: 'literal',
+                  colorRange: ['#88572C'],
+                  data,
+                  mode: 'squarify',
+                  renderMode: 'SVG',
+                  height: this.props.height || height,
+                  width: this.props.width || width,
+                  margin: 0,
+                  getSize: d => d.size,
+                  getColor: d => d.color,
+                  style: {
+                    stroke: '#000',
+                    strokeWidth: '0.5',
+                    strokeOpacity: '0.25',
+                  },
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </Measure>
     );
   }
 }

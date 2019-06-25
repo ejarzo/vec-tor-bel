@@ -11,10 +11,11 @@ import YoutubePlayer from 'components/YoutubePlayer';
 import AudioPlayer from 'components/AudioPlayer';
 import Credits from 'components/Credits';
 import ChatLog from 'components/ChatLog';
+import CommentOverlay from 'components/CommentOverlay';
 import LatestReplyText from 'components/LatestReplyText';
 import ConversationSummaryGraph from 'components/ConversationSummaryGraph';
 import Sketch1 from 'components/p5sketches/Sketch1';
-
+import Controls from './Controls';
 import SecondView from './SecondView';
 
 import {
@@ -32,7 +33,7 @@ class VecTorBel extends Component {
   constructor(props) {
     super(props);
     this.initState = {
-      runIndefinitely: true,
+      runIndefinitely: false,
 
       showEye: false,
       showGraph: false,
@@ -524,12 +525,17 @@ class VecTorBel extends Component {
     const inverseIntensity = intensity * -1 + 2;
     const youtubeBlurAmount1 = isBlurred ? Math.random() * 40 + 20 : 0;
     return (
-      <div
-        className="App"
-        // style={{
-        //   paddingBottom: 100,
-        // }}
-      >
+      <div className="App">
+        <div className="controls" style={{ zIndex: 20 }}>
+          <Controls
+            data={this.state}
+            handleUpdate={data => this.setState(data)}
+          />
+          <button onClick={this.begin}>BEGIN</button>
+          <button onClick={this.reset}>RESET</button>
+          <button onClick={this.getNextReply}>GO</button>
+        </div>
+
         <div className="PrimaryViewContainer">
           {showVideo && (
             <div className="VideoContainer">
@@ -564,130 +570,19 @@ class VecTorBel extends Component {
           </div>
 
           {latestReply && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                transition: 'all 0.3s',
-                transform: `translate3d(${
-                  showCommentOverlay ? 0 : 100
-                }vw, 0, 0)`,
-                mixBlendMode: 'screen',
-                padding: 30,
-                fontFamily: 'Roboto',
-                color: '#222',
-                background: 'white',
-                fontSize: '8em',
-              }}
-            >
-              <div>{latestReply.text}</div>
-            </div>
+            <CommentOverlay show={showCommentOverlay} text={latestReply.text} />
           )}
-
-          <div className="controls" style={{ zIndex: 20 }}>
-            <button onClick={this.begin}>BEGIN</button>
-            <button onClick={this.reset}>RESET</button>
-            <button onClick={this.getNextReply}>GO</button>
-            <button
-              onClick={() =>
-                this.setState({ showTreemap: !this.state.showTreemap })
-              }
-            >
-              Toggle treemap
-            </button>
-            {/*<button
-            onClick={() =>
-              this.setState({
-                showCommentOverlay: !this.state.showCommentOverlay,
-              })
-            }
-          >
-            toggle comment overlay
-          </button>*/}
-            {/*<button
-            onClick={() =>
-              this.setState({ runIndefinitely: !this.state.runIndefinitely })
-            }
-          >
-            Toggle infinite
-          </button>*/}
-            {/*<button
-            onClick={() => {
-              this.setState({
-                youtubeBlurAmount1: 0,
-                youtubeBlurAmount2: 0,
-              });
-            }}
-          >
-            CLEAR BLUR
-          </button>*/}
-            {/*<button
-            onClick={() => {
-              this.setState({
-                youtubeBlurAmount1: Math.random() * 50,
-              });
-            }}
-          >
-            RANDOM BLUR 1
-          </button>
-          <button
-            onClick={() => {
-              this.setState({
-                youtubeBlurAmount2: Math.random() * 50,
-              });
-            }}
-          >
-            RANDOM BLUR 2
-          </button>
-          <button
-            onClick={() => {
-              const r = Math.random() * 255;
-              const g = Math.random() * 255;
-              const b = Math.random() * 255;
-              this.setState({
-                filterColor: `rgb(${r},${g},${b})`,
-              });
-            }}
-          >
-            RANDOM COLOR
-          </button>*/}
-          </div>
 
           {latestReply && latestReply.source === 'news' && (
             <NewsHeadline latestReply={latestReply} />
           )}
-
-          <AudioPlayer
-            src={soundUrl}
-            intensity={inverseIntensity}
-            isSpeaking={isSpeaking}
-            count={count}
-          />
-          {latestReply && (
-            <div style={{ position: 'absolute', zIndex: 1 }}>
-              <ConversationSummaryGraph
-                enabled={showTreemap}
-                currEmotion={latestReply.emotion}
-              />
-            </div>
-          )}
         </div>
+
         <div className="SecondViewContainer">
           <SecondView />
         </div>
         <div className="ThirdViewContainer">
-          <div
-            style={{
-              borderBottom: '1px solid white',
-              gridColumn: '1/3',
-              gridRow: '1/2',
-              padding: 5,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              fontSize: '1.2em',
-            }}
-          >
+          <div className="ThirdViewContainer__SubtitleContainer">
             {latestReply && latestReply.text}
           </div>
           <div style={{ borderRight: '1px solid white' }}>
@@ -697,6 +592,21 @@ class VecTorBel extends Component {
             <ChatLog intensity={intensity} />
           </div>
         </div>
+
+        <AudioPlayer
+          src={soundUrl}
+          intensity={inverseIntensity}
+          isSpeaking={isSpeaking}
+          count={count}
+        />
+        {latestReply && (
+          <div style={{ position: 'absolute', zIndex: 1 }}>
+            <ConversationSummaryGraph
+              enabled={showTreemap}
+              currEmotion={latestReply.emotion}
+            />
+          </div>
+        )}
       </div>
     );
   }

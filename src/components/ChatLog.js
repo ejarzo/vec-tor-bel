@@ -34,7 +34,8 @@ class ChatLog extends Component {
         style={{
           color: 'white',
           position: 'relative',
-          height: '100%',
+          overflow: 'hidden',
+          height: 200,
           padding: 20,
         }}
       >
@@ -60,7 +61,7 @@ class ChatLog extends Component {
           style={{
             position: 'absolute',
             bottom: 20,
-            width: 'calc(100% - 115px',
+            width: 'calc(100% - 105px',
           }}
         >
           {replies.map(({ text, source }) => (

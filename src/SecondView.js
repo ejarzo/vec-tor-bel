@@ -64,7 +64,7 @@ class SecondView extends Component {
         style={{
           fontSize: '1em',
           display: 'grid',
-          height: '100vh',
+          height: '100%',
           color: 'white',
           // padding: 20,
           gridTemplateColumns: '50% 50%',
