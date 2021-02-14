@@ -215,7 +215,7 @@ class QuantumTicTacToeBoard extends Component {
                 onClick={() => this.makeMove(i + 1)}
                 style={{
                   width: `${100 / 3}%`,
-                  height: 190,
+                  height: 180,
                   border: '1px solid white',
                   background: isHighlighted ? '#444' : 'transparent',
                   display: 'flex',
@@ -269,10 +269,11 @@ class QuantumTicTacToeBoard extends Component {
           <div
             style={{
               position: 'absolute',
-              height: 400,
+              height: 200,
               // transform: 'translateY(10px)',
               zIndex: 3,
               padding: 20,
+              fontSize: '0.7em',
             }}
           >
             {this.board.gameOver() && (

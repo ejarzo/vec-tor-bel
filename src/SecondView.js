@@ -62,17 +62,18 @@ class SecondView extends Component {
     return (
       <div
         style={{
-          fontSize: '1.5em',
+          fontSize: '1em',
           display: 'grid',
-          height: '100vh',
+          height: '100%',
           color: 'white',
-          padding: 20,
+          // padding: 20,
           gridTemplateColumns: '50% 50%',
           gridTemplateRows: '50% 50%',
         }}
       >
         <div
           style={{
+            gridColumn: '1 / 3',
             border: '2px solid white',
             height: '100%',
             overflow: 'hidden',
@@ -80,7 +81,7 @@ class SecondView extends Component {
           }}
         >
           <QuantumTicTacToeBoard replies={replies} />
-          <div
+          {/*<div
             style={{
               position: 'relative',
               height: '100%',
@@ -131,9 +132,28 @@ class SecondView extends Component {
                 />
               )}
             </div>
-          </div>
+          </div>*/}
         </div>
-        <div
+
+        {/*  <div
+          className="spin"
+          style={{
+            animationDuration: `${intensity * 2}s`,
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              left: 2,
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              background: 'white',
+            }}
+          />
+        </div>
+*/}
+        {/*  <div
           style={{
             border: '2px solid white',
             height: '100%',
@@ -146,29 +166,12 @@ class SecondView extends Component {
             style={{
               height: '50%',
               borderBottom: '2px solid white',
-              padding: 20,
+              padding: 15,
               position: 'relative',
             }}
-          >
-            <div
-              className="spin"
-              style={{
-                animationDuration: `${intensity * 2}s`,
-              }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  left: 2,
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
-                  background: 'white',
-                }}
-              />
-            </div>
+          >*/}
 
-            <div style={{ position: 'absolute', bottom: 20 }}>
+        {/*<div style={{ position: 'absolute', bottom: 20 }}>
               {replies.map(({ text, source }) => (
                 <div style={{ paddingTop: 5, width: '100%' }}>
                   <span
@@ -187,7 +190,6 @@ class SecondView extends Component {
               ))}
             </div>
           </div>
-          {/* ---- credits ----- */}
           <div
             style={{
               textAlign: 'center',
@@ -203,12 +205,13 @@ class SecondView extends Component {
               ))}
             </div>
           </div>
-        </div>
+        </div>*/}
         <div
           style={{
-            padding: 20,
+            // padding: 20,
             border: '2px solid white',
             height: '100%',
+            width: '100%',
             overflow: 'hidden',
             position: 'relative',
             gridColumn: '1 / 3',
@@ -216,8 +219,8 @@ class SecondView extends Component {
         >
           {replies.length > 0 && (
             <ConversationSummaryGraph
-              width={1000}
-              height={902}
+              width={576}
+              height={536}
               enabled={treemapEnabled}
               currEmotion={latestReply.emotion}
             />

@@ -62,13 +62,14 @@ class YoutubeVideo extends Component {
       <div
         style={{
           position: 'absolute',
-          top: 0,
-          width: '100vw',
+          top: '50%',
+          left: '50%',
+          width: '100%',
           mixBlendMode: isTop && this.state.blendMode,
           transition: 'filter 1s',
           opacity: isVisible ? 1 : 0,
           height: '100%',
-          transform: 'scale(1.4)',
+          transform: 'scale(1.4) translate(-50%, -50%)',
           filter: `blur(${blurAmount}px)`,
         }}
       >
